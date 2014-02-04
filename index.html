@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>Animation</title>
+	<script>
+		var COLOR = {
+			GREEN: 0,
+			RED: 1,
+			BLUE: 2,
+			YELLOW: 3,
+			PURPLE: 4
+		};
+
+		function Sneak(){
+			this.pos = {x: 0, y: 0};
+
+			this.parts = [];
+			this.maxLength = 5;
+			this.color = COLOR.GREEN;
+		}
+
+		Sneak.prototype = {
+			growUp : function(){
+				this.maxLength++;
+			},
+
+			update : function(){
+				switch(keybinder.stat.dir){
+					case 0: this.pos.y++;
+						break; 
+					case 1: this.pos.x--;
+						break;
+					case 2: this.pos.y--;
+						break;
+					case 3: this.pos.x++;
+						break;
+				}
+
+				map.grid[this.pos.x][this.pos.y].moveIn();
+			}
+		};
+
+		var sneak = new Sneak();
+
+		function Map(){
+			this.currentData = null;
+			this.grid = [];
+			this.entities = [];
+
+			this.height = 3;
+			this.width = 3;
+
+			this.spawn = {x: 0, y:0};
+		}
+
+		Map.prototype = {
+			loadFromData : function(levelData){
+				this.currentData = levelData;
+
+				this.height = levelData.height;
+				this.width = levelData.width;
+
+				this.grid = new Array(this.height * this.width);
+				this.entityes = {};
+			},
+
+			update : function(pos, entity){
+				this.entities[pos] = entity;
+			}
+		};
+
+		var map = new Map();
+
+		function KeyBinder(){
+			this.map = {
+				UP : 'z',
+				DOWN : 's',
+				LEFT : 'q',
+				RIGHT : 'd',
+				PAUSE : 'p'
+			};
+
+			this.stat = {
+				dir : 0,
+				paused : false
+			};
+
+			CANVAS.addEventListener('keyDown', )
+		}
+
+		KeyBinder.prototype = {
+			bind : function(type, call){
+
+
+			}
+		};
+
+
+		function Animation(){
+
+
+
+		}
+
+		Animation.prototype = {
+
+
+
+
+
+		};
+
+
+		function ColorSwaper(color){
+
+
+		}
+
+		function Block(){
+
+
+		}
+
+		function Dot(type){
+
+		}
+
+
+	</script>
+</head>
+<body>
+	<canvas id='canvas'></canvas>
+
+	
+
+
+</body>
+</html>
