@@ -2,21 +2,38 @@
 <html>
 <head>
 	<meta charset="UTF-8">
-	<title>Animation</title>
+	<title>SneakColor</title>
+	<script type="text/javascript" charset="UTF-8" src="three.min.js"></script>
 	<script>
+		var CANVAS = document.createElement('canvas');
+
 		var COLOR = {
-			GREEN: 0,
-			RED: 1,
-			BLUE: 2,
+			BLACK: 0,
+			GREEN: 1,
+			RED: 2,
 			YELLOW: 3,
-			PURPLE: 4
+			BLUE: 4,
+			CYAN: 5,
+			VIOLET: 6,
+			WHITE: 7,
+			RGB:[
+				"(0,0,0)",
+				"(0,255,0)",
+				"(255,0,0)",
+				"(255,255,0)",
+				"(0,0,255)",
+				"(0,255,255)",
+				"(255,0,255)",
+				"(255,255,255)"
+			]
 		};
 
 		function Sneak(){
 			this.pos = {x: 0, y: 0};
+			this.maxLength = 5;
+			this.speed = 250;
 
 			this.parts = [];
-			this.maxLength = 5;
 			this.color = COLOR.GREEN;
 		}
 
@@ -28,7 +45,7 @@
 			update : function(){
 				switch(keybinder.stat.dir){
 					case 0: this.pos.y++;
-						break; 
+						break;
 					case 1: this.pos.x--;
 						break;
 					case 2: this.pos.y--;
@@ -37,7 +54,15 @@
 						break;
 				}
 
-				map.grid[this.pos.x][this.pos.y].moveIn();
+				if(! map.moveIn(this)){
+
+				}
+			},
+
+			reset : function(){
+				this.maxLength = 5;
+				this.parts = [];
+				this.color = COLOR.GREEN;
 			}
 		};
 
@@ -48,10 +73,10 @@
 			this.grid = [];
 			this.entities = [];
 
-			this.height = 3;
-			this.width = 3;
+			this.height = 0;
+			this.width = 0;
 
-			this.spawn = {x: 0, y:0};
+			this.spawn = {x: 0, y: 0};
 		}
 
 		Map.prototype = {
@@ -61,32 +86,55 @@
 				this.height = levelData.height;
 				this.width = levelData.width;
 
-				this.grid = new Array(this.height * this.width);
+				this.grid = [];
+				for(var i=-1, endI=his.width+1, endJ=this.height+1;  i<endI;  i++){
+					this.grid.push([]);
+
+					for(var j=-1; j<endJ; j++)
+						this.grid[i].push(
+								(i===0 || j===0 || i===this.width || j===this.height) ?
+									1 : 0
+							);
+				}
+
 				this.entityes = {};
 			},
 
-			update : function(pos, entity){
-				this.entities[pos] = entity;
+			clearEntity : function(pos){
+				delete this.entities[pos];
 			}
 		};
 
 		var map = new Map();
 
 		function KeyBinder(){
-			this.map = {
-				UP : 'z',
-				DOWN : 's',
-				LEFT : 'q',
-				RIGHT : 'd',
-				PAUSE : 'p'
-			};
 
-			this.stat = {
-				dir : 0,
-				paused : false
-			};
+			this.dir = -1;
+			this.paused = false;
 
-			CANVAS.addEventListener('keyDown', )
+			window.addEventListener('keydown', function(e){
+				switch(e.keyCode){
+					case 69: case 87: case 38:
+							this.dir = 0;
+						break;
+
+					case 83: case 40:
+							this.dir = 2;
+						break;
+
+					case 81: case 65: case 37:
+							this.dir = 1;
+						break;
+
+					case 68: case 39:
+							this.dir = 3;
+						break;
+
+					case 80:
+							//TODO pause
+						break;
+				}
+			}, false);
 		}
 
 		KeyBinder.prototype = {
@@ -96,6 +144,7 @@
 			}
 		};
 
+		var keyBinder = new KeyBinder();
 
 		function Animation(){
 
@@ -112,28 +161,192 @@
 		};
 
 
-		function ColorSwaper(color){
+		var GEO = {
+			colorSwaper : (function(){
+				var geo = new THREE.Geometry();
+				geo.vertices = convertArray([
+					-.4, -.4, .6,
+					-.4,  .4, .6,
+					 .4,  .4, .6,
+					 .4, -.4, .6,
 
+					-.4, -.4,  0,
+					-.4,  .4,  0,
+					 .4,  .4,  0,
+					 .4, -.4,  0
+				], THREE.Vector3);
 
+				geo.faces = convertArray([], THREE.Face3);
+					//TODO faces
+
+				return geo;
+			})(),
+
+			cube : (function(){
+				var geo = new THREE.Geometry();
+				geo.vertices = convertArray([
+					-.4, -.4, .6,
+					-.4,  .4, .6,
+					 .4,  .4, .6,
+					 .4, -.4, .6,
+
+					-.4, -.4,  0,
+					-.4,  .4,  0,
+					 .4,  .4,  0,
+					 .4, -.4,  0
+				], THREE.Vector3);
+
+				geo.faces = convertArray([], THREE.Face3);
+					//TODO faces
+
+				return geo;
+			})()
 		}
 
-		function Block(){
+		var MAT = {
+			colorSwaper : function(){}
 
 
+		};
+
+		function convertArray(list, type){
+			var r = [];
+			for(var i=0; i<list.length; i+=3)
+				r.push(new type(list[i], list[i+1], list[i+2]));
+
+			return r;
 		}
 
-		function Dot(type){
-
+		function ColorSwaper(color, pos){
+			this.color = color;
+			this.mesh = this.craftMesh();
 		}
 
+		ColorSwaper.prototype =	{
+			moveIn : function(sneak){
+				if(sneak.color !== this.color){
+					sneak.color = this.color;
+				}
+				return true;
+			},
 
+			craftMesh : function(){
+				return new THREE.Mesh(GEO.colorSwaper, MAT.colorSwaper(this.color));
+			}
+		};
+
+		function Block(height){
+			this.height = height;
+			this.mesh = this.craftMesh();
+		}
+
+		Block.prototype = {
+			moveIn : function(sneak){
+				return this.height === 0;
+			},
+
+			craftMesh : function(){
+				
+			}
+		};
+
+		function Dot(color){
+			this.color = color;
+			this.mesh = this.craftMesh();
+		}
+
+		Dot.prototype = {
+			moveIn : function(sneak){
+				if(sneak.color === this.color){
+					sneak.maxLength++;
+
+					return true;
+				}	
+				else
+					return false;
+			},
+
+			craftMesh : function(){
+				
+				
+			}
+		};
+
+		var GROUNDS = [
+			new Block(0),
+			new Block(1)
+		];
+
+		var ENTITIES = [
+			new ColorSwaper(COLOR.BLACK),
+			new ColorSwaper(COLOR.GREEN),
+			new ColorSwaper(COLOR.RED),
+			new ColorSwaper(COLOR.YELLOW),
+			new ColorSwaper(COLOR.BLUE),
+			new ColorSwaper(COLOR.CYAN),
+			new ColorSwaper(COLOR.VIOLET),
+			new ColorSwaper(COLOR.WHITE),
+
+			new Dot(COLOR.BLACK),
+			new Dot(COLOR.GREEN),
+			new Dot(COLOR.RED),
+			new Dot(COLOR.YELLOW),
+			new Dot(COLOR.BLUE),
+			new Dot(COLOR.CYAN),
+			new Dot(COLOR.VIOLET),
+			new Dot(COLOR.WHITE)
+		];
+
+		function RenderManager(){
+			this.cam = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 100);
+			this.render = new THREE.WebGLRenderer({antialias: false});
+   			this.scene = new THREE.Scene();
+
+   			this.onRun = false;
+   			this.lastTick = 0;
+		}
+
+		RenderManager.prototype = {
+			startUpdate : function(){
+				this.onRun = true;
+				this.lastTick = Date.now();
+				this.update(this);
+
+
+			},
+
+			stopUpdate : function(){
+				this.onRun = false;
+			},
+
+			update : function(rm){//rm => RenderManager
+				var delta = Date.now() - rm.lastTick;
+				rm.lastTick += delta;
+
+				if(rm.onRun)
+					requestAnimationFrame(function(){rm.update(rm);});
+
+			}
+		};
+
+		var renderManager = new RenderManager();
+
+
+		
+
+
+
+
+
+
+
+
+
+		window.addEventListener('load', function(){
+			document.body.appendChild(CANVAS);
+		}, false);
 	</script>
 </head>
 <body>
-	<canvas id='canvas'></canvas>
-
-	
-
-
 </body>
 </html>
