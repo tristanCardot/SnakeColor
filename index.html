@@ -3,9 +3,15 @@
 <head>
 	<meta charset="UTF-8">
 	<title>SneakColor</title>
+	<style>
+		body{
+			margin:0px;
+		}
+
+	</style>
 	<script type="text/javascript" charset="UTF-8" src="three.min.js"></script>
 	<script>
-		var CANVAS = document.createElement('canvas');
+		var CANVAS;
 
 		var COLOR = {
 			BLACK: 0,
@@ -165,19 +171,23 @@
 			colorSwaper : (function(){
 				var geo = new THREE.Geometry();
 				geo.vertices = convertArray([
-					-.4, -.4, .6,
-					-.4,  .4, .6,
-					 .4,  .4, .6,
-					 .4, -.4, .6,
+					-.4, .6, -.4,
+					-.4, .6,  .4, 
+					 .4, .6,  .4,
+					 .4, .6, -.4,
 
-					-.4, -.4,  0,
-					-.4,  .4,  0,
-					 .4,  .4,  0,
-					 .4, -.4,  0
+					-.4,  0, -.4,
+					-.4,  0,  .4,
+					 .4,  0,  .4,
+					 .4,  0, -.4
 				], THREE.Vector3);
 
-				geo.faces = convertArray([], THREE.Face3);
-					//TODO faces
+				geo.faces = convertArray([
+					0,1,2, 0,2,3,
+					1,5,6, 1,6,2
+
+				], THREE.Face3);
+					
 
 				return geo;
 			})(),
@@ -185,28 +195,71 @@
 			cube : (function(){
 				var geo = new THREE.Geometry();
 				geo.vertices = convertArray([
-					-.4, -.4, .6,
-					-.4,  .4, .6,
-					 .4,  .4, .6,
-					 .4, -.4, .6,
+					-.4,  .5, -.4,
+					-.4,  .5,  .4,
+					 .4,  .5,  .4,
+					 .4,  .5, -.4,
 
-					-.4, -.4,  0,
-					-.4,  .4,  0,
-					 .4,  .4,  0,
-					 .4, -.4,  0
+					-.5,  .4, -.5,  
+					-.5,  .4,  .5, 
+					 .5,  .4,  .5, 
+					 .5,  .4, -.5
 				], THREE.Vector3);
 
-				geo.faces = convertArray([], THREE.Face3);
-					//TODO faces
+				geo.faces = convertArray([
+					0,1,2, 0,2,3,
+					0,4,5, 0,5,1,
+					1,5,6, 1,6,2,
+					2,6,7, 2,7,3,
+					3,7,4, 3,4,0
+				], THREE.Face3);
 
 				return geo;
 			})()
-		}
+		};
 
 		var MAT = {
-			colorSwaper : function(){}
+			colorSwaper : function(rgb){
+				var material = new THREE.ShaderMaterial({
 
+				});
+			},
+			colorCube : function(rgb){
+				var vert = [
+					"#ifdef GL_ES",
+					"precision mediump float;",
+					"#endif",
 
+		    		"varying float vGrad;",
+		    		"attribute float grad;",
+
+					"void main(){",
+						"vGrad = grad;",
+						"gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0 );",
+					"}"
+				].join('\n');
+				var frag = [
+					"#ifdef GL_ES",
+					"precision mediump float;",
+					"#endif",
+
+		    		"varying float vGrad;",
+
+					"void main(void){",
+						"gl_FragColor = vec4(vGrad, vGrad, vGrad,1.);",
+					"}"
+				].join('\n');
+				var attributes = [];
+
+				return new THREE.ShaderMaterial({
+			        uniforms:       {},
+			        attributes:     {
+			        	grad : {type: 'f', value:[.4,.4,.4,.4, .15,.15, .15,.15]}
+			        },
+			        vertexShader:   vert,
+			        fragmentShader: frag
+			    });
+			}
 		};
 
 		function convertArray(list, type){
@@ -298,12 +351,17 @@
 		];
 
 		function RenderManager(){
-			this.cam = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 100);
-			this.render = new THREE.WebGLRenderer({antialias: false});
+			this.cam = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 1, 100);
+			this.renderer = new THREE.WebGLRenderer({antialias: false});
    			this.scene = new THREE.Scene();
 
+			CANVAS = this.renderer.domElement;
    			this.onRun = false;
    			this.lastTick = 0;
+
+			var self = this;
+			window.onresize = function(){self.updateSize();};
+   			this.updateSize();
 		}
 
 		RenderManager.prototype = {
@@ -311,8 +369,6 @@
 				this.onRun = true;
 				this.lastTick = Date.now();
 				this.update(this);
-
-
 			},
 
 			stopUpdate : function(){
@@ -320,30 +376,78 @@
 			},
 
 			update : function(rm){//rm => RenderManager
-				var delta = Date.now() - rm.lastTick;
+				var delta = Date.now() -rm.lastTick;
 				rm.lastTick += delta;
 
 				if(rm.onRun)
 					requestAnimationFrame(function(){rm.update(rm);});
 
+				rm.renderer.render(rm.scene, rm.cam);
+			},
+
+			updateSize : function(e){
+				this.cam.aspect = window.innerWidth /window.innerHeight;
+				this.cam.updateProjectionMatrix();
+
+				this.renderer.setSize( window.innerWidth, window.innerHeight);
+				CANVAS.style.height = window.innerHeight-5 +'px';
+				CANVAS.style.width = window.innerWidth +'px';
 			}
 		};
 
 		var renderManager = new RenderManager();
 
-
-		
-
-
-
-
-
-
-
-
-
 		window.addEventListener('load', function(){
 			document.body.appendChild(CANVAS);
+
+			var geo = GEO.cube;
+			geo.computeFaceNormals();
+			geo.computeVertexNormals();
+
+			var object = new THREE.Mesh( geo, MAT.colorCube());
+
+			renderManager.scene.add(object);
+
+
+			var list = [[-2,0], [-1,0], [1,0], [2,0]];
+
+			for(var i=0; i<20; i++)
+				for(var j=0; j<20; j++){
+				object = new THREE.Mesh( geo, MAT.colorCube());
+				object.position.x = i-10;
+				object.position.z = j-10;
+				renderManager.scene.add(object);
+			}
+
+			renderManager.cam.position.y = 2;
+			renderManager.cam.position.z = 1;
+			renderManager.cam.rotation.x = -Math.PI/3;
+
+			renderManager.renderer.render(renderManager.scene, renderManager.cam);
+
+			renderManager.startUpdate();
+
+
+
+		}, false);
+
+		window.addEventListener('keypress', function(e){console.log(e.keyCode);
+			switch(e.keyCode){
+				case 101: renderManager.cam.position.z--;
+				break;
+				case 100: renderManager.cam.position.z++;
+				break;
+				case 115: renderManager.cam.position.x--;
+				break;
+				case 102: renderManager.cam.position.x++;
+				break;
+				case 122: renderManager.cam.position.y--;
+				break;
+				case 114: renderManager.cam.position.y++;
+				break;
+			}
+
+
 		}, false);
 	</script>
 </head>
