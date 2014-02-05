@@ -13,10 +13,7 @@
 	<script>
 		var V3 = THREE.Vector3;
 		var F3 = THREE.Face3;
-
-
 		var CANVAS;
-
 		var COLOR = {
 			BLACK: 0,
 			GREEN: 1,
@@ -37,6 +34,8 @@
 				new V3(255,255,255)
 			]
 		};
+
+
 
 		function Sneak(){
 			this.pos = {x: 0, y: 0};
@@ -65,7 +64,6 @@
 				}
 
 				if(! map.moveIn(this)){
-
 				}
 			},
 
@@ -82,6 +80,7 @@
 			this.currentData = null;
 			this.grid = [];
 			this.entities = [];
+			this.ld = {};
 
 			this.height = 0;
 			this.width = 0;
@@ -90,11 +89,11 @@
 		}
 
 		Map.prototype = {
-			loadFromData : function(levelData){
-				this.currentData = levelData;
+			updateData : function(ld){//ld=> LevelData TODO basic
+				this.ld = ld;
 
-				this.height = levelData.height;
-				this.width = levelData.width;
+				this.height = ld.height;
+				this.width = ld.width;
 
 				this.grid = [];
 				for(var i=-1, endI=his.width+1, endJ=this.height+1;  i<endI;  i++){
@@ -107,11 +106,23 @@
 							);
 				}
 
-				this.entityes = {};
+
 			},
 
 			clearEntity : function(pos){
-				delete this.entities[pos];
+				delete this.entities[pos.x][pos.y];
+			},
+
+			loadEntities : function(){
+				this.entities = [];
+				for(var i=-1, endI=his.width+1, endJ=this.height+1;  i<endI;  i++){
+					this.entities.push([]);
+
+					for(var j=-1; j<endJ; j++)
+						if(j>-1 && j)
+						this.entities[i].push(this.ld.entities[]
+
+
 			}
 		};
 
@@ -163,10 +174,6 @@
 		}
 
 		Animation.prototype = {
-
-
-
-
 
 		};
 
@@ -404,7 +411,7 @@
 		};
 
 		function convertArray(list, type){
-			var r = [];
+			var r = [];//result
 			for(var i=0; i<list.length; i+=3)
 				r.push(new type(list[i], list[i+1], list[i+2]));
 
@@ -440,7 +447,10 @@
 			},
 
 			craftMesh : function(){
-				
+				if(this.height === 0)
+					return new THREE.Mesh(GEO.ground, MAT.grayGradient([.4,.4,.4,.4, .25,.25,.25,.25]));
+				else
+					return new THREE.Mesh(GEO.wall, MAT.grayGradient([.4,.4,.4,.4, .25,.25,.25,.25, .25,.25,.25,.25]));
 			}
 		};
 
@@ -461,8 +471,7 @@
 			},
 
 			craftMesh : function(){
-				
-				
+				return new THREE.Mesh(GEO.dot, MAT.color(this.color));
 			}
 		};
 
@@ -495,6 +504,7 @@
 			this.cam = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 1, 100);
 			this.renderer = new THREE.WebGLRenderer({antialias: false});
    			this.scene = new THREE.Scene();
+   			this.meshes = {};
 
 			CANVAS = this.renderer.domElement;
    			this.onRun = false;
@@ -533,6 +543,21 @@
 				this.renderer.setSize( window.innerWidth, window.innerHeight);
 				CANVAS.style.height = window.innerHeight-5 +'px';
 				CANVAS.style.width = window.innerWidth +'px';
+			},
+
+			defineMesh : function(id, pos){
+				var mesh = ENTITIES[id].mesh.clone();
+				mesh.position.x = pos.x;
+				mesh.position.z = pos.y;
+
+				return mesh;
+
+				this.scene.add(mesh);
+			},
+
+			clearMesh : function(mesh){
+				this.scene
+
 			}
 		};
 
