@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="UTF-8">
-	<title>SneakColor</title>
+	<title>SnakeColor</title>
 	<style>
 		body{
 			margin:0px;
@@ -11,6 +11,10 @@
 	</style>
 	<script type="text/javascript" charset="UTF-8" src="three.min.js"></script>
 	<script>
+		var V3 = THREE.Vector3;
+		var F3 = THREE.Face3;
+
+
 		var CANVAS;
 
 		var COLOR = {
@@ -23,14 +27,14 @@
 			VIOLET: 6,
 			WHITE: 7,
 			RGB:[
-				"(0,0,0)",
-				"(0,255,0)",
-				"(255,0,0)",
-				"(255,255,0)",
-				"(0,0,255)",
-				"(0,255,255)",
-				"(255,0,255)",
-				"(255,255,255)"
+				new V3(0,0,0),
+				new V3(0,255,0),
+				new V3(255,0,0),
+				new V3(255,255,0),
+				new V3(0,0,255),
+				new V3(0,255,255),
+				new V3(255,0,255),
+				new V3(255,255,255)
 			]
 		};
 
@@ -168,26 +172,67 @@
 
 
 		var GEO = {
-			colorSwaper : (function(){
+			dot :(function(){
 				var geo = new THREE.Geometry();
 				geo.vertices = convertArray([
-					-.4, .6, -.4,
-					-.4, .6,  .4, 
-					 .4, .6,  .4,
-					 .4, .6, -.4,
+					-.1, .1, -.1,
+					-.1, .1,  .1, 
+					 .1, .1,  .1,
+					 .1, .1, -.1,
 
-					-.4,  0, -.4,
-					-.4,  0,  .4,
-					 .4,  0,  .4,
-					 .4,  0, -.4
+					-.1, .0, -.1,
+					-.1, .0,  .1,
+					 .1, .0,  .1,
+					 .1, .0, -.1
 				], THREE.Vector3);
 
 				geo.faces = convertArray([
 					0,1,2, 0,2,3,
-					1,5,6, 1,6,2
+					0,4,5, 0,5,1,
+					1,5,6, 1,6,2,
+					2,6,7, 2,7,3,
+					3,7,4, 3,4,0,
+					5,4,7, 5,7,6 
+				], THREE.Face3)
+				return geo;
+			})(),
+
+			colorSwaper : (function(){
+				var geo = new THREE.Geometry();
+				geo.vertices = convertArray([
+					-.2, .05, -.2,
+					-.2, .05,  .2, 
+					 .2, .05,  .2,
+					 .2, .05, -.2,
+
+					-.4,  0, -.4,
+					-.4,  0,  .4,
+					 .4,  0,  .4,
+					 .4,  0, -.4,
+
+					-.45, -.049, -.45,
+					-.45, -.049,  .45,
+					 .45, -.049,  .45,
+					 .45, -.049, -.45
+				], THREE.Vector3);
+
+				geo.faces = convertArray([
+					0,4,5, 0,5,1,
+					1,5,6, 1,6,2,
+					2,6,7, 2,7,3,
+					3,7,4, 3,4,0,
+
+					0,5,4, 0,1,5,
+					1,6,5, 1,2,6,
+					2,7,6, 2,3,7,
+					3,4,7, 3,0,4,
+
+					4,8,9,   4,9,5,
+					5,9,10,  5,10,6,
+					6,10,11, 6,11,7,
+					7,11,8,  7,8,4
 
 				], THREE.Face3);
-					
 
 				return geo;
 			})(),
@@ -254,12 +299,73 @@
 		};
 
 		var MAT = {
-			colorSwaper : function(rgb){
-				var material = new THREE.ShaderMaterial({
+			color : function(color){
+				var vert = [
+					"#ifdef GL_ES",
+					"precision mediump float;",
+					"#endif",
 
-				});
+					"void main(){",
+						"gl_Position = projectionMatrix *modelViewMatrix *vec4(position, 1.0);",
+					"}"
+				].join('\n');
+				var frag = [
+					"#ifdef GL_ES",
+					"precision mediump float;",
+					"#endif",
+
+					"uniform vec3 color;",
+
+					"void main(void){",
+						"gl_FragColor = vec4(color, 1.);",
+					"}"
+				].join('\n');
+				var attributes = [];
+
+				return new THREE.ShaderMaterial({
+			        uniforms: {color : {type: 'v3', value: color} },
+			        attributes: {},
+			        vertexShader:   vert,
+			        fragmentShader: frag
+			    });
 			},
-			colorCube : function(list){
+			alphaGradient : function(list, color){
+				var vert = [
+					"#ifdef GL_ES",
+					"precision mediump float;",
+					"#endif",
+
+		    		"varying float vAlpha;",
+		    		"attribute float alpha;",
+
+					"void main(){",
+						"vAlpha = alpha;",
+						"gl_Position = projectionMatrix *modelViewMatrix *vec4(position, 1.0);",
+					"}"
+				].join('\n');
+				var frag = [
+					"#ifdef GL_ES",
+					"precision mediump float;",
+					"#endif",
+
+					"uniform vec3 color;",
+		    		"varying float vAlpha;",
+
+					"void main(void){",
+						"gl_FragColor = vec4(color, vAlpha);",
+					"}"
+				].join('\n');
+				var attributes = [];
+
+				return new THREE.ShaderMaterial({
+			        uniforms: {color : {type: 'v3', value: color} },
+			        attributes: {alpha : {type: 'f', value: list} },
+			        vertexShader:   vert,
+			        fragmentShader: frag,
+			        transparent: true
+			    });
+			},
+			grayGradient : function(list){
 				var vert = [
 					"#ifdef GL_ES",
 					"precision mediump float;",
@@ -319,7 +425,7 @@
 			},
 
 			craftMesh : function(){
-				return new THREE.Mesh(GEO.colorSwaper, MAT.colorSwaper(this.color));
+				return new THREE.Mesh(GEO.colorSwaper, MAT.alphaGradient(this.color));
 			}
 		};
 
@@ -442,16 +548,29 @@
 
 			for(var i=0; i<20; i++)
 				for(var j=0; j<20; j++){
-				var object = new THREE.Mesh( ((i+j)%5) <3 ? GEO.wall : GEO.ground , MAT.colorCube(((i+j)%5) <3 ? [.3,.3,.3,.3, .25,.25,.25,.25, .2,.2,.2,.2] : [.4,.4,.4,.4, .25,.25,.25,.25]));
-				console.log(object.material);
-				object.position.x = i-10;
-				object.position.z = j-10;
-				renderManager.scene.add(object);
+
+				if(i === 0 || j === 0 || i===19 || j===19){
+					var object = new THREE.Mesh(GEO.wall , MAT.grayGradient([.4,.4,.4,.4, .25,.25,.25,.25, .25,.25,.25,.25]));
+					object.position.x = i-10;
+					object.position.z = j-10;
+					renderManager.scene.add(object);
+
+				}else{
+					var object = new THREE.Mesh(GEO.ground , MAT.grayGradient([.4,.4,.4,.4, .25,.25,.25,.25]));
+					object.position.x = i-10;
+					object.position.z = j-10;
+					renderManager.scene.add(object);
+
+					var object = new THREE.Mesh(GEO.dot , MAT.color(COLOR.RGB[i%COLOR.WHITE]));
+					object.position.x = i-10;
+					object.position.z = j-10;
+					renderManager.scene.add(object);
+				}
 			}
 
-			renderManager.cam.position.y = 2;
-			renderManager.cam.position.z = 1;
-			renderManager.cam.rotation.x = -Math.PI/3;
+			renderManager.cam.position.y = 3;
+			renderManager.cam.position.z = 10;
+			renderManager.cam.rotation.x = -Math.PI/5;
 
 			renderManager.renderer.render(renderManager.scene, renderManager.cam);
 
