@@ -28,18 +28,43 @@
 
 			RGB:[
 				new V3(0,0,0),
-				new V3(0,255,0),
-				new V3(255,0,0),
-				new V3(255,255,0),
-				new V3(0,0,255),
-				new V3(0,255,255),
-				new V3(255,0,255),
-				new V3(255,255,255)
+				new V3(1/255*40, 1/255*180, 1/255*20),
+				new V3(1,0,0),
+				new V3(1,1,0),
+				new V3(0,0,1),
+				new V3(0,1,1),
+				new V3(1,0,1),
+				new V3(1,1,1)
 			]
 		};
 
 		var GEO = {
-			dot :(function(){
+			snakePart: (function(){
+				var geo = new THREE.Geometry();
+				geo.vertices = convertArray([
+					-.4, .2, -.4,
+					-.4, .2,  .4, 
+					 .4, .2,  .4,
+					 .4, .2, -.4,
+
+					-.4, .0, -.4,
+					-.4, .0,  .4,
+					 .4, .0,  .4,
+					 .4, .0, -.4
+				], THREE.Vector3);
+
+				geo.faces = convertArray([
+					0,1,2, 0,2,3,
+					0,4,5, 0,5,1,
+					1,5,6, 1,6,2,
+					2,6,7, 2,7,3,
+					3,7,4, 3,4,0,
+					5,4,7, 5,7,6 
+				], THREE.Face3);
+				return geo;
+			})(),
+
+			dot: (function(){
 				var geo = new THREE.Geometry();
 				geo.vertices = convertArray([
 					-.1, .1, -.1,
@@ -60,11 +85,11 @@
 					2,6,7, 2,7,3,
 					3,7,4, 3,4,0,
 					5,4,7, 5,7,6 
-				], THREE.Face3)
+				], THREE.Face3);
 				return geo;
 			})(),
 
-			colorSwaper : (function(){
+			colorSwaper: (function(){
 				var geo = new THREE.Geometry();
 				geo.vertices = convertArray([
 					-.2, .05, -.2,
@@ -104,7 +129,7 @@
 				return geo;
 			})(),
 
-			ground : (function(){
+			ground: (function(){
 				var geo = new THREE.Geometry();
 				geo.vertices = convertArray([
 					-.4,  0, -.4,
@@ -129,7 +154,7 @@
 				return geo;
 			})(),
 
-			wall : (function(){
+			wall: (function(){
 				var geo = new THREE.Geometry();
 				geo.vertices = convertArray([
 					-.4,  .4, -.4,
@@ -271,22 +296,56 @@
 		};
 
 
-//----- SNEAK
-		function Sneak(){
+//----- SNAKE
+		function Snake(){
 			this.pos = {x: 0, y: 0};
 			this.maxLength = 5;
-			this.speed = 250;
+			this.speed = 500;
 			this.nextMove = 0;
 
+			this.dir = -1;
 			this.parts = [];
 			this.color = COLOR.GREEN;
-
-			this.mesh = new THREE.Mesh(GEO.wall, MAT.color(COLOR.GREEN));
 		}
 
-		Sneak.prototype = {
+		Snake.prototype = {
 			growUp : function(){
 				this.maxLength++;
+			},
+
+			setDir : function(newDir){
+				var lastPart = this.parts[this.parts.length-2];
+				if(lastPart === undefined){
+					this.dir = newDir;
+					return;
+				}
+
+				switch(newDir){
+					case 0: 
+							if(this.pos.x !== lastPart.x || this.pos.y !== lastPart.y+1){
+								console.log(this.pos.x+','+this.pos.y+' | '+lastPart.x+','+lastPart.y);
+								this.dir = newDir;
+							}
+						break;
+					case 1:
+							if(this.pos.y !== lastPart.y || this.pos.x !== lastPart.x+1){
+								console.log(this.pos.x+','+this.pos.y+' | '+lastPart.x+','+lastPart.y);
+								this.dir = newDir;
+							}
+						break;
+					case 2:
+							if(this.pos.x !== lastPart.x || this.pos.y !== lastPart.y-1){
+								console.log(this.pos.x+','+this.pos.y+' | '+lastPart.x+','+lastPart.y);
+								this.dir = newDir;
+							}
+						break;
+					case 3:
+							if(this.pos.y !== lastPart.y || this.pos.x !== lastPart.x-1){
+								console.log(this.pos.x+','+this.pos.y+' | '+lastPart.x+','+lastPart.y);
+								this.dir = newDir;
+							}
+						break;
+				}
 			},
 
 			update : function(delta){
@@ -296,33 +355,45 @@
 
 				this.nextMove+=this.speed;
 
-				switch(keyBinder.dir){
-					case 0: this.pos.y++;
+				switch(this.dir){
+					case 0: this.pos.y--;
 						break;
 					case 1: this.pos.x--;
 						break;
-					case 2: this.pos.y--;
+					case 2: this.pos.y++;
 						break;
 					case 3: this.pos.x++;
 						break;
 					default: return;
 				}
 
+				//if(map.moveIn(this)){
+					var lastPart = this.parts[this.parts.length-1];
 
-				if(map.moveIn(this)){
-					var mesh = this.renderManager.defineMesh(ENTITIES[0], this.pos.x, this.pos.y);
+					var mesh = renderManager.craftMesh(TYPE.LIST[TYPE.SNAKE], this.pos.x, this.pos.y);
+					var vx = this.pos.x + (this.dir === 1 ? .6 : this.dir === 3 ? -.6 : 0);
+					var vz = this.pos.y + (this.dir === 0 ? .6 : this.dir === 2 ? -.6 : 0);
 
-					this.parts.push({x: this.pos.x, y: this.pos.y, mesh:mesh});
+					animationManager.pushAnimation(mesh, {
+						'position' : {from: new V3(vx,0,vz), to: mesh.position.clone()},
+						'scale' : {from: new V3(.1,.1,.1), to: new V3(1,1,1)}
+					}, this.speed, 0);
 
-					if(this.parts.length > this.maxLength)
-						RenderManager.clearMesh( this.parts[0]);
-						this.parts = this.parts.slice(1);
-				}
+					this.parts.push({x: this.pos.x, y: this.pos.y});
+
+					if(this.parts.length > this.maxLength){
+						renderManager.clearMesh( this.parts[0].x, this.parts[1].y);
+						this.parts = this.parts.splice(1);
+					}
+				//}
 			},
 
 			reset : function(){
 				this.maxLength = 5;
-				this.parts = [];
+				this.parts = [map.spawn];
+				this.dir = -1;
+				renderManager.craftMesh(TYPE.LIST[TYPE.SNAKE], this.pos.x, this.pos.y);
+
 				this.color = COLOR.GREEN;
 				this.pos.x = map.spawn.x;
 				this.pos.y = map.spawn.y;
@@ -334,7 +405,6 @@
 		function Map(){
 			this.currentData = null;
 			this.grid = [];
-			this.entities = [];
 			this.ld = {};
 
 			this.height = 0;
@@ -356,27 +426,21 @@
 				this.grid = [];
 				for(var i=-1, endI=this.width+1, endJ=this.height+1, length, gridS,entityS;  i<endI;  i++){
 					this.grid.push([]);
-					this.entities.push([]);
 
 					length = this.grid.length-1;
 
 					for(var j=-1; j<endJ; j++){
-						if(i<0 || j<0 || i>=this.width || j>=this.height){
-							gridS = GROUNDS.LIST[ GROUNDS.WALL ];
-							entityS = undefined;
-
-						}else{
-							gridS = GROUNDS.LIST[ ld.grid[i *this.height +j] ];
-							entityS = ENTITIES.LIST[ ld.entities[i *this.height +j] ];
-						}
+						if(i<0 || j<0 || i>=this.width || j>=this.height)
+							gridS = TYPE.LIST[ TYPE.WALL ];
+						else
+							gridS = TYPE.LIST[ ld.grid[i +j*ld.width] ];
 						
 						this.grid[length].push(gridS);
-						renderManager.craftGrid(gridS, i+1, j+1);
-
-						this.entities[length].push(entityS)
-						renderManager.craftEntity(entityS, i+1, j+1);
+						renderManager.craftMesh(gridS, i+1, j+1);
 					}
 				}
+
+				snake.reset();
 			},
 
 			clearEntity : function(pos){
@@ -389,13 +453,13 @@
 			},
 
 			reset : function(){
-				sneak.reset();
+				snake.reset();
 
-				for(var i=0,j,select; i<this.entities.length; i++){
-					this.entities.push([]);
+				for(var i=0,j,select; i<this.grid.length; i++){
+					this.grid.push([]);
 
 					for(j=0; j<this.height; j++){
-						var select = this.ld.entities[i *this.height +j];
+						var select = this.ld.grid[i *this.height +j];
 
 						if(select !== undefined){
 							var mesh = renderManager.defineMesh(select);
@@ -411,25 +475,25 @@
 
 //----- KEYBINDER
 		function KeyBinder(){
-			this.dir = -1;
 			this.paused = false;
 
-			window.addEventListener('keydown', function(e){
+			var self = this;
+			window.addEventListener('keydown', function(e){console.log(e.keyCode);
 				switch(e.keyCode){
-					case 69: case 87: case 38:
-							this.dir = 0;
+					case 90: case 87: case 38:
+							snake.setDir(0);
 						break;
 
 					case 83: case 40:
-							this.dir = 2;
+							snake.setDir(2);
 						break;
 
 					case 81: case 65: case 37:
-							this.dir = 1;
+							snake.setDir(1);
 						break;
 
 					case 68: case 39:
-							this.dir = 3;
+							snake.setDir(3);
 						break;
 
 					case 80:
@@ -448,17 +512,65 @@
 
 
 //----- ANIMATION
-		function Animation(){
-
-
-
+		function AnimationManager(){
+			this.list = [];
 		}
 
-		Animation.prototype = {
+		AnimationManager.prototype = {
+			pushAnimation : function(mesh, param, duration, delay){
+				this.list.push(new Animation(mesh, param, duration, delay));
+			},
 
+
+			update : function(delta){
+				for(var i=0; i<this.list.length; i++)
+					if(this.list[i].update(delta)){
+						this.list.splice(i,1);
+						i--;
+					}
+			}
 		};
 
 
+		function Animation(mesh, param, duration, delay){
+			this.mesh = mesh;
+			this.param = param;
+			this.duration = duration;
+			this.delay = delay || 0;
+
+			if(this.delay === 0)
+				for(key in this.param)
+					this.mesh[key].set(
+						this.param[key].from.x,
+						this.param[key].from.y,
+						this.param[key].from.z
+					);
+		}
+
+		Animation.prototype = {
+			update : function(delta){
+				this.delay -= delta;
+
+				if(this.delay>0)
+					return;
+
+				var off = -this.delay/ this.duration;
+
+				if(off>1)
+					off = 1;
+
+				var offN = 1-off;
+
+				for(key in this.param)
+					this.mesh[key].set(
+						this.param[key].from.x *offN + this.param[key].to.x *off,
+						this.param[key].from.y *offN + this.param[key].to.y *off,
+						this.param[key].from.z *offN + this.param[key].to.z *off
+					);
+
+				return off === 1;
+			}
+		};
 
 
 		function convertArray(list, type){
@@ -471,20 +583,20 @@
 
 
 //----- ENTITIES CONSTRUCTOR + STATIC
-		function SneakPart(sneak){
+		function SnakePart(){
 			this.color;
 			this.mesh = this.craftMesh();
 		}
 
-		SneakPart.prototype = {
+		SnakePart.prototype = {
 			moveIn : function(){
 				return false;
 			},
 
 			craftMesh : function(){
-				var mat = MAT.color(COLOR.GREEN);
+				var mat = MAT.color(COLOR.RGB[ COLOR.GREEN ]);
 				this.color = mat.uniforms.color;
-				return new THREE.Mesh(GEO.colorSwaper, mat);
+				return new THREE.Mesh(GEO.snakePart, mat);
 			}
 		};
 
@@ -495,25 +607,26 @@
 		}
 
 		ColorSwaper.prototype =	{
-			moveIn : function(sneak){
-				if(sneak.color !== this.color){
-					sneak.color = this.color;
+			moveIn : function(snake){
+				if(snake.color !== this.color){
+					snake.color = this.color;
 				}
 				return true;
 			},
 
 			craftMesh : function(){
-				return new THREE.Mesh(GEO.colorSwaper, MAT.alphaGradient(this.color));
+				return new THREE.Mesh(GEO.colorSwaper, MAT.alphaGradient([.4,.4,.4,.4, .25,.25,.25,.25], this.color));
 			}
 		};
 
 		function Block(height){
 			this.height = height;
 			this.mesh = this.craftMesh();
+			this.ground = true;
 		}
 
 		Block.prototype = {
-			moveIn : function(sneak){
+			moveIn : function(snake){
 				return this.height === 0;
 			},
 
@@ -531,9 +644,9 @@
 		}
 
 		Dot.prototype = {
-			moveIn : function(sneak){
-				if(sneak.color === this.color){
-					sneak.maxLength++;
+			moveIn : function(snake){
+				if(snake.color === this.color){
+					snake.maxLength++;
 
 					return true;
 				}	
@@ -546,44 +659,41 @@
 			}
 		};
 
-		var GROUNDS = {
+		var TYPE = {
+			GROUND: 0,
+			WALL: 1,
+			SNAKE: 2,
+
+			SWAPERBLACK: 3,
+			SWAPERGREEN: 4,
+			SWAPERRED: 5,
+			SWAPERYELLOW: 6,
+
 			LIST: [
 				new Block(0),
-				new Block(1)
-			],
-			GROUND: 0,
-			WALL: 1
+				new Block(1),
+				new SnakePart(),
+
+				new ColorSwaper(COLOR.RGB[ COLOR.BLACK ]),
+				new ColorSwaper(COLOR.RGB[ COLOR.GREEN ]),
+				new ColorSwaper(COLOR.RGB[ COLOR.RED ]),
+				new ColorSwaper(COLOR.RGB[ COLOR.YELLOW ]),
+				new ColorSwaper(COLOR.RGB[ COLOR.BLUE ]),
+				new ColorSwaper(COLOR.RGB[ COLOR.CYAN ]),
+				new ColorSwaper(COLOR.RGB[ COLOR.VIOLET ]),
+				new ColorSwaper(COLOR.RGB[ COLOR.WHITE ]),
+
+				new Dot(COLOR.RGB[ COLOR.BLACK ]),
+				new Dot(COLOR.RGB[ COLOR.GREEN ]),
+				new Dot(COLOR.RGB[ COLOR.RED ]),
+				new Dot(COLOR.RGB[ COLOR.YELLOW ]),
+				new Dot(COLOR.RGB[ COLOR.BLUE ]),
+				new Dot(COLOR.RGB[ COLOR.CYAN ]),
+				new Dot(COLOR.RGB[ COLOR.VIOLET ]),
+				new Dot(COLOR.RGB[ COLOR.WHITE ])
+			]
 		};
-
-		var ENTITIES = {
-			LIST: [
-				new SneakPart(),
-
-				new ColorSwaper(COLOR.BLACK),
-				new ColorSwaper(COLOR.GREEN),
-				new ColorSwaper(COLOR.RED),
-				new ColorSwaper(COLOR.YELLOW),
-				new ColorSwaper(COLOR.BLUE),
-				new ColorSwaper(COLOR.CYAN),
-				new ColorSwaper(COLOR.VIOLET),
-				new ColorSwaper(COLOR.WHITE),
-
-				new Dot(COLOR.BLACK),
-				new Dot(COLOR.GREEN),
-				new Dot(COLOR.RED),
-				new Dot(COLOR.YELLOW),
-				new Dot(COLOR.BLUE),
-				new Dot(COLOR.CYAN),
-				new Dot(COLOR.VIOLET),
-				new Dot(COLOR.WHITE)
-			],
-
-			SNEAK: 0,
-			SWAPERBLACK: 1,
-			SWAPERGREEN: 2
-		};
-
-
+		TYPE.LIST['undefined'] = TYPE.LIST[0];
 //----- RENDERMANAGER
 		function RenderManager(){
 			this.cam = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 1, 100);
@@ -591,7 +701,6 @@
    			this.scene = new THREE.Scene();
    			
    			this.grid;
-   			this.entities;
 
 			CANVAS = this.renderer.domElement;
    			this.onRun = false;
@@ -621,7 +730,8 @@
 					requestAnimationFrame(function(){rm.update(rm);});
 
 				rm.renderer.render(rm.scene, rm.cam);
-				sneak.update(delta);
+				snake.update(delta);
+				animationManager.update(delta);
 			},
 
 			updateSize : function(e){
@@ -635,20 +745,20 @@
 
 			initGrid : function(height, width){
 				this.grid = [];
-				this.entities = [];
+				this.ground = [];
 
 				for(var i=0, j; i<width; i++){
 					this.grid.push([]);
-					this.entities.push([]);
+					this.ground.push([]);
 
 					for(j=0; j<height; j++){
 						this.grid[i].push();
-						this.entities[i].push();
+						this.ground[i].push();
 					}
 				}
 			},
 
-			craftEntity : function(type, x, y){
+			craftMesh : function(type, x, y){
 				if(type === undefined)
 					return;
 
@@ -656,89 +766,58 @@
 				mesh.position.x = x;
 				mesh.position.z = y;
 
-				this.entities[x][y] = mesh;
+				this.grid[x][y] = mesh;
 
 				this.scene.add(mesh);
+
+				if(type.ground === undefined){
+					var ground = TYPE.LIST['undefined'].mesh.clone();
+
+					ground.position.x = x;
+					ground.position.z = y;
+
+					this.scene.add(ground);
+				}
+
+				return mesh;
 			},
 
-			clearEntity : function(x, y){
-				this.scene.remove(this.entities[x][y]);
-				this.entities[x][y] = undefined;
-			},
-
-			craftGrid : function(type, x, y){
-				if(type === undefined)
-					return;
-
-				var mesh = type.mesh.clone();
-				mesh.position.x = x;
-				mesh.position.z = y;
-
-				this.entities[x][y] = mesh;
-
-				this.scene.add(mesh);
-			},
-			
-			clearGrid : function(x, y){
+			clearMesh : function(x, y){
 				this.scene.remove(this.grid[x][y]);
 				this.grid[x][y] = undefined;
-			},
-
+			}
 		};
 
 //----- MAIN
-		var sneak = new Sneak();
+		var snake = new Snake();
 		var map = new Map();
 		var keyBinder = new KeyBinder();
 		var renderManager = new RenderManager();
+		var animationManager = new AnimationManager();
 
 		window.addEventListener('load', function(){
 			document.body.appendChild(CANVAS);
 
-			/*
-			var geo = GEO.wall;
-			geo.computeFaceNormals();
-			geo.computeVertexNormals();
-
-			for(var i=0; i<20; i++)
-				for(var j=0; j<20; j++){
-
-				if(i === 0 || j === 0 || i===19 || j===19){
-					var object = new THREE.Mesh(GEO.wall , MAT.grayGradient([.4,.4,.4,.4, .25,.25,.25,.25, .25,.25,.25,.25]));
-					object.position.x = i-10;
-					object.position.z = j-10;
-					renderManager.scene.add(object);
-
-				}else{
-					var object = new THREE.Mesh(GEO.ground , MAT.grayGradient([.4,.4,.4,.4, .25,.25,.25,.25]));
-					object.position.x = i-10;
-					object.position.z = j-10;
-					renderManager.scene.add(object);
-
-					var object = new THREE.Mesh(GEO.dot , MAT.color(COLOR.RGB[i%COLOR.WHITE]));
-					object.position.x = i-10;
-					object.position.z = j-10;
-					renderManager.scene.add(object);
-				}
-			}*/
-
 			map.updateData({
-				height: 20,
-				width: 30,
-				grid: [ 0,0,0,0,0, 0,0,0,0,0, 0,0,0,0,0, 0,0,0,0,0
+				height: 10,
+				width: 10,
+				spawn: {x:5, y:5},
+				grid: [
+					0,1,2,3,4, 10,11,12,13,14,
+					0,0,0,0,0, 0,0,0,0,0,
+					0,0,1,1,1, 0,0,0,0,0,
+					0,0,0,1,1, 0,0,0,0,0,
+					0,0,1,0,1, 0,0,0,1,0,
 
-
-
-
-
-				], 
-				entities: [
-					0,0,0,0,0,0,0,0,0,0
-
-				] 
-			});
+					0,1,0,0,0, 1,0,1,0,0,
+					0,0,0,0,0, 1,1,0,0,0,
+					0,0,0,0,0, 1,1,1,0,0,
+					0,0,0,0,0, 0,0,0,0,0,
+					0,0,0,0,0, 0,0,0,0,0
+				]});
 
 			renderManager.cam.position.y = 3;
+			renderManager.cam.position.x = 5;
 			renderManager.cam.position.z = 10;
 			renderManager.cam.rotation.x = -Math.PI/5;
 
@@ -746,22 +825,21 @@
 		}, false);
 
 		window.addEventListener('keypress', function(e){
-			switch(e.keyCode){
+
+			/*switch(e.keyCode){
 				case 101: renderManager.cam.position.z--;
-				break;
+					break;
 				case 100: renderManager.cam.position.z++;
-				break;
+					break;
 				case 115: renderManager.cam.position.x--;
-				break;
+					break;
 				case 102: renderManager.cam.position.x++;
-				break;
+					break;
 				case 122: renderManager.cam.position.y--;
-				break;
+					break;
 				case 114: renderManager.cam.position.y++;
-				break;
-			}
-
-
+					break;
+			}*/
 		}, false);
 	</script>
 </head>
