@@ -322,28 +322,20 @@
 
 				switch(newDir){
 					case 0: 
-							if(this.pos.x !== lastPart.x || this.pos.y !== lastPart.y+1){
-								console.log(this.pos.x+','+this.pos.y+' | '+lastPart.x+','+lastPart.y);
+							if(this.pos.x !== lastPart.x || this.pos.y !== lastPart.y+1)
 								this.dir = newDir;
-							}
 						break;
 					case 1:
-							if(this.pos.y !== lastPart.y || this.pos.x !== lastPart.x+1){
-								console.log(this.pos.x+','+this.pos.y+' | '+lastPart.x+','+lastPart.y);
+							if(this.pos.y !== lastPart.y || this.pos.x !== lastPart.x+1)
 								this.dir = newDir;
-							}
 						break;
 					case 2:
-							if(this.pos.x !== lastPart.x || this.pos.y !== lastPart.y-1){
-								console.log(this.pos.x+','+this.pos.y+' | '+lastPart.x+','+lastPart.y);
+							if(this.pos.x !== lastPart.x || this.pos.y !== lastPart.y-1)
 								this.dir = newDir;
-							}
 						break;
 					case 3:
-							if(this.pos.y !== lastPart.y || this.pos.x !== lastPart.x-1){
-								console.log(this.pos.x+','+this.pos.y+' | '+lastPart.x+','+lastPart.y);
+							if(this.pos.y !== lastPart.y || this.pos.x !== lastPart.x-1)
 								this.dir = newDir;
-							}
 						break;
 				}
 			},
@@ -367,7 +359,7 @@
 					default: return;
 				}
 
-				//if(map.moveIn(this)){
+				if(map.moveIn(this)){
 					var lastPart = this.parts[this.parts.length-1];
 
 					var mesh = renderManager.craftMesh(TYPE.LIST[TYPE.SNAKE], this.pos.x, this.pos.y);
@@ -382,21 +374,24 @@
 					this.parts.push({x: this.pos.x, y: this.pos.y});
 
 					if(this.parts.length > this.maxLength){
-						renderManager.clearMesh( this.parts[0].x, this.parts[1].y);
+						renderManager.clearMesh( this.parts[0].x, this.parts[0].y);
 						this.parts = this.parts.splice(1);
 					}
-				//}
+				}else
+					map.reset();
 			},
 
 			reset : function(){
 				this.maxLength = 5;
 				this.parts = [map.spawn];
 				this.dir = -1;
-				renderManager.craftMesh(TYPE.LIST[TYPE.SNAKE], this.pos.x, this.pos.y);
 
 				this.color = COLOR.GREEN;
 				this.pos.x = map.spawn.x;
 				this.pos.y = map.spawn.y;
+
+				renderManager.craftMesh(TYPE.LIST[TYPE.SNAKE], map.spawn.x, map.spawn.y);
+				map.grid[map.spawn.x][map.spawn.y] = TYPE.LIST[TYPE.SNAKE];
 			}
 		};
 
@@ -409,7 +404,6 @@
 
 			this.height = 0;
 			this.width = 0;
-
 			this.spawn = {x: 0, y: 0};
 		}
 
@@ -419,24 +413,39 @@
 
 				this.height = ld.height;
 				this.width = ld.width;
-				this.spawn = ld.spawn;
+				this.spawn = {x: ld.spawn.x+1, y: ld.spawn.y+1};
 
 				renderManager.initGrid(this.height+2, this.width+2);
 
 				this.grid = [];
-				for(var i=-1, endI=this.width+1, endJ=this.height+1, length, gridS,entityS;  i<endI;  i++){
+				for(var i=-1, endI=this.width+1, endJ=this.height+1, length, select;  i<endI;  i++){
 					this.grid.push([]);
 
 					length = this.grid.length-1;
 
 					for(var j=-1; j<endJ; j++){
 						if(i<0 || j<0 || i>=this.width || j>=this.height)
-							gridS = TYPE.LIST[ TYPE.WALL ];
+							select = TYPE.LIST[ TYPE.WALL ];
 						else
-							gridS = TYPE.LIST[ ld.grid[i +j*ld.width] ];
+							select = TYPE.LIST[ ld.grid[i +j*ld.width] ];
 						
-						this.grid[length].push(gridS);
-						renderManager.craftMesh(gridS, i+1, j+1);
+
+						if(select !== undefined){
+							if(select.ground === true)
+								renderManager.addGround(select, i+1, j+1);
+
+							else{
+								renderManager.craftMesh(select, i+1, j+1);
+								renderManager.addGround(TYPE.LIST[TYPE.GROUND], i+1, j+1);
+							}
+
+							this.grid[i+1].push(select);
+
+						}else{
+							this.grid[i+1].push(TYPE.LIST[TYPE.GROUND]);
+							renderManager.addGround(TYPE.LIST[TYPE.GROUND], i+1, j+1);
+						}
+
 					}
 				}
 
@@ -452,23 +461,27 @@
 				}
 			},
 
+			moveIn : function(snake){
+				return this.grid[snake.pos.x][snake.pos.y].moveIn(snake);
+			},
+
 			reset : function(){
-				snake.reset();
+				for(var i=0, j; i<this.width; i++)
+					for(var j=0; j<this.height; j++){
+						select = TYPE.LIST[ this.ld.grid[i +j*this.width] ];
 
-				for(var i=0,j,select; i<this.grid.length; i++){
-					this.grid.push([]);
+						if(select !== undefined)
+							if(select.ground !== true){
+								renderManager.craftMesh(select, i+1, j+1);
+								this.grid[i+1][j+1] = select;
 
-					for(j=0; j<this.height; j++){
-						var select = this.ld.grid[i *this.height +j];
-
-						if(select !== undefined){
-							var mesh = renderManager.defineMesh(select);
-							this.entities[i].push({type: select, mesh: mesh});
-
-						}else
-							this.entities[i].push({});
+							}else{
+								renderManager.clearMesh(i+1, j+1);
+								this.grid[i+1][j+1] = TYPE.LIST[TYPE.GROUND];
+							}
 					}
-				}
+
+				snake.reset();
 			}
 		};
 
@@ -478,7 +491,7 @@
 			this.paused = false;
 
 			var self = this;
-			window.addEventListener('keydown', function(e){console.log(e.keyCode);
+			window.addEventListener('keydown', function(e){
 				switch(e.keyCode){
 					case 90: case 87: case 38:
 							snake.setDir(0);
@@ -766,25 +779,33 @@
 				mesh.position.x = x;
 				mesh.position.z = y;
 
+				if(this.grid[x][y] !== undefined)
+					this.scene.remove(this.grid[x][y]);
+
 				this.grid[x][y] = mesh;
-
 				this.scene.add(mesh);
-
-				if(type.ground === undefined){
-					var ground = TYPE.LIST['undefined'].mesh.clone();
-
-					ground.position.x = x;
-					ground.position.z = y;
-
-					this.scene.add(ground);
-				}
-
 				return mesh;
 			},
 
 			clearMesh : function(x, y){
 				this.scene.remove(this.grid[x][y]);
 				this.grid[x][y] = undefined;
+			},
+
+			addGround : function(type, x, y){
+				if(type.ground !== true)
+					return;
+				
+				var ground = type.mesh.clone();
+				ground.position.x = x;
+				ground.position.z = y;
+
+				if(this.ground[x][y] !== undefined)
+					this.scene.remove(this.grid[x][y]);
+
+				this.ground[x][y] = ground;
+
+				this.scene.add(ground);
 			}
 		};
 
@@ -801,7 +822,7 @@
 			map.updateData({
 				height: 10,
 				width: 10,
-				spawn: {x:5, y:5},
+				spawn: {x:0, y:0},
 				grid: [
 					0,1,2,3,4, 10,11,12,13,14,
 					0,0,0,0,0, 0,0,0,0,0,
