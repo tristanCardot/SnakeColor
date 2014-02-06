@@ -295,12 +295,20 @@
 			}
 		};
 
+		function convertArray(list, type, length){
+			var r = [];//result
+
+				for(var i=0; i<list.length; i+=3)
+					r.push(new type(list[i], list[i+1], list[i+2]));
+
+			return r;
+		}
 
 //----- SNAKE
 		function Snake(){
 			this.pos = {x: 0, y: 0};
 			this.maxLength = 5;
-			this.speed = 500;
+			this.speed = 150;
 			this.nextMove = 0;
 
 			this.dir = -1;
@@ -321,7 +329,7 @@
 				}
 
 				switch(newDir){
-					case 0: 
+					case 0:
 							if(this.pos.x !== lastPart.x || this.pos.y !== lastPart.y+1)
 								this.dir = newDir;
 						break;
@@ -363,19 +371,34 @@
 					var lastPart = this.parts[this.parts.length-1];
 
 					var mesh = renderManager.craftMesh(TYPE.LIST[TYPE.SNAKE], this.pos.x, this.pos.y);
-					var vx = this.pos.x + (this.dir === 1 ? .6 : this.dir === 3 ? -.6 : 0);
-					var vz = this.pos.y + (this.dir === 0 ? .6 : this.dir === 2 ? -.6 : 0);
+					var vx = (this.dir === 1 ? 1 : this.dir === 3 ? -1 : 0);
+					var vz = (this.dir === 0 ? 1 : this.dir === 2 ? -1 : 0);
 
 					animationManager.pushAnimation(mesh, {
-						'position' : {from: new V3(vx,0,vz), to: mesh.position.clone()},
-						'scale' : {from: new V3(.1,.1,.1), to: new V3(1,1,1)}
+						'position': {from: new V3(this.pos.x +vx *.6, 0, this.pos.y +vz *.6), to: mesh.position.clone()},
+						'scale': {from: new V3(.1,.1,.1), to: new V3(1,1,1)}
+					}, this.speed, 0);
+
+					var camP = renderManager.cam.position.clone();
+					animationManager.pushAnimation(renderManager.cam, {
+						'position': {from: camP, to: new V3(this.pos.x, camP.y, this.pos.y+.5)}
 					}, this.speed, 0);
 
 					this.parts.push({x: this.pos.x, y: this.pos.y});
+					map.setPos(this.pos.x, this.pos.y, TYPE.LIST[TYPE.SNAKE]);
 
 					if(this.parts.length > this.maxLength){
-						renderManager.clearMesh( this.parts[0].x, this.parts[0].y);
+						var part = this.parts[0];
+						var mesh = renderManager.grid[part.x][part.y];
+
+						map.clearPos(part.x, part.y);
 						this.parts = this.parts.splice(1);
+
+						animationManager.pushAnimation(mesh, {
+							'position': {from: new V3(part.x, 0, part.y), to: new V3(this.parts[0].x, 0, this.parts[0].y)},
+							'scale': {from: new V3(1,1,1), to: new V3(.1,.1,.1)}
+						}, this.speed, 0,
+						function(mesh){renderManager.clearMesh(mesh);});
 					}
 				}else
 					map.reset();
@@ -390,8 +413,14 @@
 				this.pos.x = map.spawn.x;
 				this.pos.y = map.spawn.y;
 
-				renderManager.craftMesh(TYPE.LIST[TYPE.SNAKE], map.spawn.x, map.spawn.y);
+				var mesh = renderManager.craftMesh(TYPE.LIST[TYPE.SNAKE], map.spawn.x, map.spawn.y);
+				animationManager.pushAnimation(mesh, {
+					'scale': {from: new V3(.05,.05,.05), to: new V3(1,1,1)}
+				},400, 0);
+
+
 				map.grid[map.spawn.x][map.spawn.y] = TYPE.LIST[TYPE.SNAKE];
+				keyBinder.paused = false;
 			}
 		};
 
@@ -452,36 +481,53 @@
 				snake.reset();
 			},
 
-			clearEntity : function(pos){
-				var entity = this.entities[pos.x][pos.y];
-
-				if(entity.type !== undefined){
-					renderManager.clearMesh(entity);
-					this.entities[pos.x][pos.y] = {};
-				}
-			},
-
 			moveIn : function(snake){
 				return this.grid[snake.pos.x][snake.pos.y].moveIn(snake);
 			},
 
+			clearPos : function(x, y){
+				this.grid[x][y] = TYPE.LIST[TYPE.GROUND];
+			},
+
+			setPos : function(x, y, type){
+				this.grid[x][y] = type;
+			},
+
 			reset : function(){
-				for(var i=0, j; i<this.width; i++)
-					for(var j=0; j<this.height; j++){
-						select = TYPE.LIST[ this.ld.grid[i +j*this.width] ];
+				keyBinder.paused = true;
+				snake.dir = -1;
 
-						if(select !== undefined)
-							if(select.ground !== true){
-								renderManager.craftMesh(select, i+1, j+1);
-								this.grid[i+1][j+1] = select;
+				for(var i= (snake.parts.length>25 ? snake.parts.length-25 : 0); i<snake.parts.length; i++){
+					var mesh = renderManager.grid[snake.parts[i].x][snake.parts[i].y];
 
-							}else{
-								renderManager.clearMesh(i+1, j+1);
-								this.grid[i+1][j+1] = TYPE.LIST[TYPE.GROUND];
+					animationManager.pushAnimation(mesh, {
+						'rotation' : {from: new V3(0,0,0), to: new V3(0, Math.PI*4, 0)},
+						'scale' : {from: new V3(1,1,1), to: new V3(0.05, 0.05, 0.05)}
+					}, 400, i*50,
+					function(mesh){renderManager.clearMesh(mesh);});
+				}
+
+				animationManager.pushAnimation(renderManager.cam, {
+						'position': {from: renderManager.cam.position.clone(), to: new V3(map.spawn.x, renderManager.cam.position.y, map.spawn.y+.5)}
+					}, 250, Math.min(25, snake.parts.length) *50+200,
+					function(){
+						for(var i=0, j; i<map.width; i++)
+							for(var j=0; j<map.height; j++){
+								select = TYPE.LIST[ map.ld.grid[i +j *map.width] ];
+
+								if(select !== undefined)
+									if(select.ground !== true){
+										renderManager.craftMesh(select, i+1, j+1);
+										map.grid[i+1][j+1] = select;
+
+									}else{
+										renderManager.clearPos(i+1, j+1);
+										map.grid[i+1][j+1] = select;
+									}
 							}
-					}
 
-				snake.reset();
+						snake.reset();
+					});
 			}
 		};
 
@@ -492,6 +538,9 @@
 
 			var self = this;
 			window.addEventListener('keydown', function(e){
+				if(self.paused)
+					return;
+
 				switch(e.keyCode){
 					case 90: case 87: case 38:
 							snake.setDir(0);
@@ -530,10 +579,9 @@
 		}
 
 		AnimationManager.prototype = {
-			pushAnimation : function(mesh, param, duration, delay){
-				this.list.push(new Animation(mesh, param, duration, delay));
+			pushAnimation : function(mesh, param, duration, delay, callback){
+				this.list.push(new Animation(mesh, param, duration, delay, callback));
 			},
-
 
 			update : function(delta){
 				for(var i=0; i<this.list.length; i++)
@@ -545,11 +593,12 @@
 		};
 
 
-		function Animation(mesh, param, duration, delay){
+		function Animation(mesh, param, duration, delay, callback){
 			this.mesh = mesh;
 			this.param = param;
 			this.duration = duration;
 			this.delay = delay || 0;
+			this.callback = callback;
 
 			if(this.delay === 0)
 				for(key in this.param)
@@ -581,18 +630,15 @@
 						this.param[key].from.z *offN + this.param[key].to.z *off
 					);
 
-				return off === 1;
+				if(off === 1){
+					if(this.callback)
+						this.callback(this.mesh);
+					return true;
+				}
+
+				return false;
 			}
 		};
-
-
-		function convertArray(list, type){
-			var r = [];//result
-			for(var i=0; i<list.length; i+=3)
-				r.push(new type(list[i], list[i+1], list[i+2]));
-
-			return r;
-		}
 
 
 //----- ENTITIES CONSTRUCTOR + STATIC
@@ -709,7 +755,7 @@
 		TYPE.LIST['undefined'] = TYPE.LIST[0];
 //----- RENDERMANAGER
 		function RenderManager(){
-			this.cam = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 1, 100);
+			this.cam = new THREE.PerspectiveCamera(125, window.innerWidth/window.innerHeight, 1, 100);
 			this.renderer = new THREE.WebGLRenderer({antialias: false});
    			this.scene = new THREE.Scene();
    			
@@ -737,6 +783,9 @@
 
 			update : function(rm){//rm => RenderManager
 				var delta = Date.now() -rm.lastTick;
+				if(delta > 40)
+					delta = 40;
+
 				rm.lastTick += delta;
 
 				if(rm.onRun)
@@ -787,9 +836,13 @@
 				return mesh;
 			},
 
-			clearMesh : function(x, y){
+			clearPos : function(x, y){
 				this.scene.remove(this.grid[x][y]);
 				this.grid[x][y] = undefined;
+			},
+
+			clearMesh : function(mesh){
+				this.scene.remove(mesh);
 			},
 
 			addGround : function(type, x, y){
@@ -837,30 +890,14 @@
 					0,0,0,0,0, 0,0,0,0,0
 				]});
 
-			renderManager.cam.position.y = 3;
-			renderManager.cam.position.x = 5;
-			renderManager.cam.position.z = 10;
-			renderManager.cam.rotation.x = -Math.PI/5;
+			renderManager.cam.position.y = 2;
+			renderManager.cam.position.x = 0;
+			renderManager.cam.position.z = .5;
+			renderManager.cam.rotation.order = 'YXZ';
+			renderManager.cam.rotation.x = -Math.PI/32*14;
+			renderManager.cam.rotation.y = -Math.PI/32;
 
 			renderManager.startUpdate();
-		}, false);
-
-		window.addEventListener('keypress', function(e){
-
-			/*switch(e.keyCode){
-				case 101: renderManager.cam.position.z--;
-					break;
-				case 100: renderManager.cam.position.z++;
-					break;
-				case 115: renderManager.cam.position.x--;
-					break;
-				case 102: renderManager.cam.position.x++;
-					break;
-				case 122: renderManager.cam.position.y--;
-					break;
-				case 114: renderManager.cam.position.y++;
-					break;
-			}*/
 		}, false);
 	</script>
 </head>
