@@ -197,9 +197,9 @@
 					.4,.4,.4,  .5,.3,.4,  .5,.3,-.4,  .4,.4,-.4,
 					.4,.4,-.4,  .4,.3,-.5,  -.4,.3,-.5,  -.4,.4,-.4,
 
-					-.4,.4,-.4, -.4,.3,-.5, -.5,.3,-.4,  
-					-.4,.4,.4, -.5,.3,.4, -.4,.3,.5,  
-					.4,.4,.4,  .4,.3,.5,  .5,.3,.4,  
+					-.4,.4,-.4, -.4,.3,-.5, -.5,.3,-.4,
+					-.4,.4,.4, -.5,.3,.4, -.4,.3,.5,
+					.4,.4,.4,  .4,.3,.5,  .5,.3,.4,
 					.4,.4,-.4, .5,.3,-.4, .4,.3,-.5,
 
 					-.5,.3,-.4,  -.5,-.1,-.4,  -.5,-.1,.4,  -.5,.3,.4,
@@ -248,7 +248,7 @@
 		};
 
 		var MAT = {
-			sneakColor : function(list, color){
+			sneakColor : (function(){
 				var vert = [
 					"#ifdef GL_ES",
 					"precision mediump float;",
@@ -274,17 +274,22 @@
 						"gl_FragColor = vec4(color *vSaturation, 1.);",
 					"}"
 				].join('\n');
-				var attributes = [];
 
 				return new THREE.ShaderMaterial({
-					uniforms: {color : {type: 'v3', value: color} },
-					attributes: {saturation : {type: 'f', value: list} },
+					uniforms: {color : {type: 'v3', value: new V3(0,0,0)} },
+					attributes: {saturation : {type: 'f', value: [
+						.75, .75, .75, .75,
+						  1,   1,   1,   1,
+						 .9,  .9,  .9,  .9,
+						 .6,  .6,  .6,  .6,
+						.45, .45, .45, .45
+					]} },
 					vertexShader:   vert,
 					fragmentShader: frag
 				});
-			},
+			})(),
 
-			color : function(color){
+			color : (function(){
 				var vert = [
 					"#ifdef GL_ES",
 					"precision mediump float;",
@@ -308,13 +313,14 @@
 				var attributes = [];
 
 				return new THREE.ShaderMaterial({
-			        uniforms: {color : {type: 'v3', value: color} },
+			        uniforms: {color : {type: 'v3', value: new V3(0,0,0)} },
 			        attributs : {},
 			        vertexShader:   vert,
 			        fragmentShader: frag
 			    });
-			},
-			alphaGradient : function(list, color){
+			})(),
+
+			alphaGradient : (function(){
 				var vert = [
 					"#ifdef GL_ES",
 					"precision mediump float;",
@@ -343,14 +349,15 @@
 				var attributes = [];
 
 				return new THREE.ShaderMaterial({
-			        uniforms: {color : {type: 'v3', value: color} },
-			        attributes: {alpha : {type: 'f', value: list} },
+			        uniforms: {color : {type: 'v3', value: new V3(0,0,0)} },
+			        attributes: {alpha : {type: 'f', value: [-.5,-.5,-.5,-.5, .75,.75,.75,.75, 0,0,0,0]} },
 			        vertexShader:   vert,
 			        fragmentShader: frag,
 			        transparent: true
 			    });
-			},
-			grayGradient : function(list){
+			})(),
+
+			grayGradient : (function(){
 				var vert = [
 					"#ifdef GL_ES",
 					"precision mediump float;",
@@ -378,14 +385,14 @@
 				var attributes = [];
 
 				return new THREE.ShaderMaterial({
-			        uniforms:       {},
-			        attributes:     {
-			        	grad : {type: 'f', value: list}
+			        uniforms: {},
+			        attributes: {
+			        	grad : {type: 'f', value: []}
 			        },
 			        vertexShader:   vert,
 			        fragmentShader: frag
 			    });
-			}
+			})()
 		};
 
 		function convertArray(list, type, length){
@@ -761,15 +768,9 @@
 			},
 
 			craftMesh : function(){
-				var mat = MAT.sneakColor([
-					.75, .75, .75, .75,
-					  1,   1,   1,   1,
-					 .9,  .9,  .9,  .9,
-					 .6,  .6,  .6,  .6,
-					.45, .45, .45, .45
-				], COLOR.RGB[ COLOR.GREEN ]);
+				var mat = MAT.sneakColor.clone();
+				this.color = mat.uniforms.color.value = COLOR.RGB[ COLOR.GREEN ]
 
-				this.color = mat.uniforms.color;
 				return new THREE.Mesh(GEO.snakePart, mat);
 			}
 		};
@@ -790,7 +791,10 @@
 			},
 
 			craftMesh : function(){
-				return new THREE.Mesh(GEO.colorSwaper, MAT.alphaGradient([-.5,-.5,-.5,-.5, .75,.75,.75,.75, 0,0,0,0], COLOR.RGB[this.color]));
+				var mat = MAT.alphaGradient.clone();
+				mat.uniforms.color.value = COLOR.RGB[this.color];
+
+				return new THREE.Mesh(GEO.colorSwaper, mat);
 			}
 		};
 
@@ -806,35 +810,46 @@
 			},
 
 			craftMesh : function(){
-				if(this.height === 0)
-					return new THREE.Mesh(GEO.ground, MAT.grayGradient([.35,.35,.35,.35, .45,.45,.45,.45, .40,.40,.40,.40, .3,.3,.3,.3, .25,.25,.25,.25]));
-				else
-					return new THREE.Mesh(GEO.wall, MAT.grayGradient([.25,.25,.25,.25,
+				var mat = MAT.grayGradient.clone(),
+					geo;
 
-			.35,.35,.35,.35,
-			.30,.30,.30,.30,
-			.2,.2,.2,.2,
-			.15,.15,.15,.15,
+				if(this.height === 0){
+					geo = GEO.ground;
+					mat.attributes = {grad: {type:'f', value:[.35,.35,.35,.35, .45,.45,.45,.45, .40,.40,.40,.40, .3,.3,.3,.3, .25,.25,.25,.25]}};
 
-			.25,.25,.25,
-			.325,.325,.325,
-			.25,.25,.25,
-			.175,.175,.175,
+				}else{
+					geo = GEO.wall;
+					mat.attributes = {grad: {type:'f', value:[
+						.25,.25,.25,.25,
 
-			.4,.4,.4,.4,
-			.35,.35,.35,.35,
-			.25,.25,.25,.25,
-			.2,.2,.2,.2,
+						.35,.35,.35,.35,
+						.30,.30,.30,.30,
+						.2,.2,.2,.2,
+						.15,.15,.15,.15,
 
-			.3,.3,.3,.3,
-			.375,.375,.375,.375,
-			.3,.3,.3,.3,
-			.225,.225,.225,.225,
+						.25,.25,.25,
+						.325,.325,.325,
+						.25,.25,.25,
+						.175,.175,.175,
 
-			.35,.35,.35,
-			.35,.35,.35,
-			.35,.35,.35,
-			.35,.35,.35]));
+						.4,.4,.4,.4,
+						.35,.35,.35,.35,
+						.25,.25,.25,.25,
+						.2,.2,.2,.2,
+
+						.3,.3,.3,.3,
+						.375,.375,.375,.375,
+						.3,.3,.3,.3,
+						.225,.225,.225,.225,
+
+						.35,.35,.35,
+						.35,.35,.35,
+						.35,.35,.35,
+						.35,.35,.35
+					]}};
+				}
+
+				return new THREE.Mesh(geo, mat);
 			}
 		};
 
@@ -847,7 +862,7 @@
 			moveIn : function(snake){
 				if(snake.color === this.color){
 					snake.maxLength++;
-
+					map.dotCount--;
 					return true;
 
 				}else
@@ -855,7 +870,10 @@
 			},
 
 			craftMesh : function(){
-				return new THREE.Mesh(GEO.dot, MAT.color( COLOR.RGB[this.color]));
+				var mat = MAT.color.clone();
+				mat.uniforms.color.value = COLOR.RGB[this.color];
+
+				return new THREE.Mesh(GEO.dot, mat);
 			}
 		};
 
@@ -958,12 +976,16 @@
 
 				for(var i=0, j; i<width; i++){
 					this.grid.push([]);
+
+					for(j=0; j<height; j++)
+						this.grid[i].push(null);
+				}
+
+				for(var i=0, j, endI=(width>>3)+1, endJ=(height>>3)+1; i<endI; i++){
 					this.ground.push([]);
 
-					for(j=0; j<height; j++){
-						this.grid[i].push(null);
+					for(j=0; j<endJ; j++)
 						this.ground[i].push(null);
-					}
 				}
 			},
 
@@ -1006,12 +1028,24 @@
 				ground.position.x = x;
 				ground.position.z = y;
 
-				if(this.ground[x][y] !== null)
-					this.scene.remove(this.grid[x][y]);
+				x>>=3;
+				y>>=3;
 
-				this.ground[x][y] = ground;
+
+				/*if(this.ground[x][y] !== null){
+					console.log(ground.geometry);
+					THREE.GeometryUtils.merge(this.ground[x][y].geometry, ground.geometry.clone());
+				}else*/
+					this.ground[x][y] = ground;
 
 				this.scene.add(ground);
+			},
+
+			clearGround : function(){
+				for(var i=0, j; i<this.ground.length; i++)
+					for(j=0; j<this.ground[0].length; j++)
+						if(this.ground[i][j] !== null)
+							this.scene.remove(this.ground[i][j]);
 			}
 		};
 
