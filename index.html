@@ -5,6 +5,7 @@
 	<title>SnakeColor</title>
 	<style>
 		body{
+			overflow:hidden;
 			margin:0px;
 		}
 
@@ -14,11 +15,13 @@
 	<script type="text/javascript" charset="UTF-8" src="three.min.js"></script>
 	<script>
 
-//----- STATIC
-		var V3 = THREE.Vector3;
-		var F3 = THREE.Face3;
-		var CANVAS;
-		var COLOR = {
+//- STATIC
+		var SCREENY = 0,
+			FOV = 75,
+			V3 = THREE.Vector3,
+			F3 = THREE.Face3,
+			CANVAS,
+			COLOR = {
 			BLACK: 0,
 			GREEN: 1,
 			RED: 2,
@@ -405,7 +408,7 @@
 		}
 
 
-//----- SNAKE
+//- SNAKE
 		function Snake(){
 			this.pos = {x: 0, y: 0};
 			this.maxLength = 5;
@@ -529,7 +532,7 @@
 		};
 
 
-//----- MAP
+//- MAP
 		function Map(){
 			this.currentData = null;
 			this.grid = [];
@@ -641,7 +644,7 @@
 		};
 
 
-//----- KEYBINDER
+//- KEYBINDER
 		function KeyBinder(){
 			this.paused = false;
 
@@ -682,7 +685,7 @@
 		};
 
 
-//----- ANIMATION
+//- ANIMATION
 		function AnimationManager(){
 			this.list = [];
 		}
@@ -750,7 +753,7 @@
 		};
 
 
-//----- ENTITIES CONSTRUCTOR + STATIC
+//- ENTITIES CONSTRUCTOR + STATIC
 		function SnakePart(){
 			this.color;
 			this.mesh = this.craftMesh();
@@ -924,9 +927,9 @@
 		TYPE.LIST['undefined'] = TYPE.LIST[0];
 
 
-//----- RENDERMANAGER
+//- RENDERMANAGER
 		function RenderManager(){
-			this.cam = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 1, 100);
+			this.cam = new THREE.PerspectiveCamera(FOV, window.innerWidth/window.innerHeight, 1, 100);
 			this.renderer = new THREE.WebGLRenderer({antialias: false});
 			this.renderer.setClearColor( 0x888888, 1);
 
@@ -975,8 +978,10 @@
 				this.cam.updateProjectionMatrix();
 
 				this.renderer.setSize( window.innerWidth, window.innerHeight);
-				CANVAS.style.height = window.innerHeight-5 +'px';
+				CANVAS.style.height = window.innerHeight+'px';
 				CANVAS.style.width = window.innerWidth +'px';
+
+				SCREENY = window.innerHeight/2 * ( Math.cos( FOV/180*Math.PI/2 ) / Math.sin(FOV/180*Math.PI/2) );
 			},
 
 			initGrid : function(height, width){
@@ -1034,6 +1039,10 @@
 				this.scene.remove(mesh);
 			},
 
+			addMesh : function(mesh){
+				this.scene.add(mesh);
+			},
+
 			addGround : function(type, x, y){
 				if(type.ground !== true)
 					return;
@@ -1056,68 +1065,119 @@
 					for(j=0; j<this.ground[0].length; j++)
 						if(this.ground[i][j] !== null)
 							this.scene.remove(this.ground[i][j]);
+			},
+
+			renderFrame : function(){
+				this.renderer.render(this.scene, this.cam);
 			}
 		};
-//-BUILDER
 
-function Builder(){
-	this.buildArea = [];
-	this.height = 10;
-	this.width = 10;
 
-	this.craftDefault();
-}
+//- BUILDER
 
-Builder.prototype = {
-	craftDefault : function(){
-		this.buildArea = [];
+		function Builder(){
+			this.buildArea = [];
+			this.height = 10;
+			this.width = 10;
 
-		for(var i=0,j; i<this.width; i++)
-			for(j=0; j<this.height; j++)
-				this.buildArea[i]>.push({data: 0, meshes:[]});
-		//TODO meshes
-	},
+			this.craftDefault();
+		}
 
-	updatePos : function(typeId, x, y){
-		this.buildArea[x][y].data = typeId;
-		//TODO meshes
-	},
+		Builder.prototype = {
+			craftDefault : function(){
+				this.buildArea = [];
 
-	setSize : function(height, width){
-		if(this.height < height)
-			for(var i=0, j; i<this.width; i++)
-				for(j=this.height; j<height; j++)
-					this.buildArea[i].push({data: 0, meshes:[]});
+				for(var i=0,j; i<this.width; i++){
+					this.buildArea.push([]);
 
-		else if(this.height > height)
-			for(var i=0, j; i<this.width; i++)
-				this.buildArea[i].splice(height);
-		
-		this.height = height;
+					for(j=0; j<this.height; j++)
+						this.buildArea[i].push({data: 0, meshes:[
+								this.addMesh(TYPE.ground)
+							]});
+				}
+			},
 
-		if(this.width < width)
-			for(var i=this.width, j; i<width; i++){
-				this.buildArea.push([]);
+			addMesh : function(id){
+				var mesh = TYPE.LIST[id].clone();
+				renderManager.addMesh( mesh );
+				return mesh;
+			},
 
-				for(j=0; j<this.height; j++)
-					this.buildArea[i].push({data: 0, meshes:[]});
+			updatePos : function(typeId, x, y){
+				this.clearPos(this.buildArea[x][y]);
+
+				if(typeId === TYPE.wall || typeId === TYPE.ground)
+					this.buildArea[x][y].meshes.push( this.addMesh(typeId) );
+
+				else
+					this.buildArea[x][y].meshes.push( 
+						this.addMesh(TYPE.ground),
+						this.addMesh(typeId)
+					);
+
+				this.buildArea[x][y].data = typeId;
+			},
+
+			setSize : function(height, width){
+				if(this.height < height)
+					for(var i=0, j; i<this.width; i++)
+						for(j=this.height; j<height; j++)
+							this.buildArea[i].push({data: 0, meshes:[
+									this.addMesh(TYPE.ground)
+								]});
+
+				else if(this.height > height)
+					for(var i=0, j; i<this.width; i++){
+						for(j=height; j<this.height; j++)
+							this.clearPos(this.buildArea[i][j]);
+
+						this.buildArea[i].splice(height);
+					}
+				
+				this.height = height;
+
+				if(this.width < width)
+					for(var i=this.width, j; i<width; i++){
+						this.buildArea.push([]);
+
+						for(j=0; j<this.height; j++)
+							this.buildArea[i].push({data: 0, meshes:[
+									this.addMesh(TYPE.ground)
+								]});
+					}
+
+				else if(this.width > width)
+					this.buildArea.splice(width);
+
+				this.width = width;
+			},
+
+			clearPos : function(pos, start, end){
+				for(var i=start||0, end=end||pos.meshes.length; i<end; i++)
+					renderManager.clearMesh(pos.meshes[i]);
 			}
+		};
 
-		else if(this.width > width)
-			this.buildArea.splice(width);
+		function getGridPos(x, y){
+			var offY = renderManager.cam.position.y * Math.tan(  Math.atan( (y - window.innerHeight/2) /SCREENY)  );
+			var offX = renderManager.cam.position.y * Math.tan(  Math.atan( (x - window.innerWidth/2) /SCREENY)  );
 
-		this.width = width;
-		//TODO clear/add meshes
-	}
+			renderManager.cam.position.x += Math.round(offX);
+			renderManager.cam.position.z += Math.round(offY);
 
-};
+			renderManager.renderFrame();
 
-//----- MAIN
+		};
+
+
+//- MAIN
 		var snake = new Snake();
 		var map = new Map();
 		var keyBinder = new KeyBinder();
 		var renderManager = new RenderManager();
 		var animationManager = new AnimationManager();
+
+		window.addEventListener('click', function(e){console.log(e); getGridPos(e.x, e.y);},false);
 
 		window.addEventListener('load', function(){
 			document.body.appendChild(CANVAS);
@@ -1142,11 +1202,11 @@ Builder.prototype = {
 				]});
 
 			renderManager.cam.position.y = 5;
-			renderManager.cam.position.x = 0;
-			renderManager.cam.position.z = .5;
+			renderManager.cam.position.x = 1;
+			renderManager.cam.position.z = 1;
 			renderManager.cam.rotation.order = 'YXZ';
-			renderManager.cam.rotation.x = -Math.PI/32*14;
-			renderManager.cam.rotation.y = -Math.PI/32;
+			renderManager.cam.rotation.x = -Math.PI/2;/*-Math.PI/32*14;
+			renderManager.cam.rotation.y = -Math.PI/32;*/
 
 			renderManager.startUpdate();
 		}, false);
