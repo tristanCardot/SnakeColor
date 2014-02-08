@@ -1058,7 +1058,59 @@
 							this.scene.remove(this.ground[i][j]);
 			}
 		};
+//-BUILDER
 
+function Builder(){
+	this.buildArea = [];
+	this.height = 10;
+	this.width = 10;
+
+	this.craftDefault();
+}
+
+Builder.prototype = {
+	craftDefault : function(){
+		this.buildArea = [];
+
+		for(var i=0,j; i<this.width; i++)
+			for(j=0; j<this.height; j++)
+				this.buildArea[i]>.push({data: 0, meshes:[]});
+		//TODO meshes
+	},
+
+	updatePos : function(typeId, x, y){
+		this.buildArea[x][y].data = typeId;
+		//TODO meshes
+	},
+
+	setSize : function(height, width){
+		if(this.height < height)
+			for(var i=0, j; i<this.width; i++)
+				for(j=this.height; j<height; j++)
+					this.buildArea[i].push({data: 0, meshes:[]});
+
+		else if(this.height > height)
+			for(var i=0, j; i<this.width; i++)
+				this.buildArea[i].splice(height);
+		
+		this.height = height;
+
+		if(this.width < width)
+			for(var i=this.width, j; i<width; i++){
+				this.buildArea.push([]);
+
+				for(j=0; j<this.height; j++)
+					this.buildArea[i].push({data: 0, meshes:[]});
+			}
+
+		else if(this.width > width)
+			this.buildArea.splice(width);
+
+		this.width = width;
+		//TODO clear/add meshes
+	}
+
+};
 
 //----- MAIN
 		var snake = new Snake();
@@ -1071,8 +1123,8 @@
 			document.body.appendChild(CANVAS);
 
 			map.updateData({
-				height: 10,
-				width: 10,
+				height: 20,
+				width: 20,
 				spawn: {x:0, y:0},
 				dotCount: 5,
 				grid: [
