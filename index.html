@@ -3,9 +3,9 @@
 <head>
 	<meta charset="UTF-8">
 	<title>SnakeColor</title>
-	<style>
+	<style id='style'>
 		div#craftGeo{
-			background-position:-0px -0px;
+			background-position: -0px -0px;
 			position:absolute;
 			top:0px;
 			left:120px;
@@ -36,11 +36,12 @@
 		div#craftBox{
 			height:60px;
 			width:180px;
+			box-shadow:0px 0px 5px 2px black;
 		}
 
 
 		div#craftGeo:hover{
-			width:180px;
+			width:240px;
 			background-position:0px 0px;
 		}	
 
@@ -75,14 +76,14 @@
 			box-shadow: inset 0px 0px 6px 2px black, inset 0px 0px 6px 6px rgb(200,200,200);
 		}
 
-		span.black{ background-color:black;}
-		span.green{ background-color:green;}
-		span.red{ background-color:red;}
-		span.yellow{ background-color:yellow;}
-		span.blue{ background-color:blue;}
-		span.cyan{ background-color:cyan;}
-		span.violet{ background-color:magenta;}
-		span.white{ background-color:white;}
+		span.BLACK{ background-color:black;}
+		span.GREEN{ background-color:green;}
+		span.RED{ background-color:red;}
+		span.YELLOW{ background-color:yellow;}
+		span.BLUE{ background-color:blue;}
+		span.CYAN{ background-color:cyan;}
+		span.VIOLET{ background-color:magenta;}
+		span.WHITE{ background-color:white;}
 
 	</style>
 	<script type="text/javascript" charset="UTF-8" src="three.min.js"></script>
@@ -94,6 +95,7 @@
 			V3 = THREE.Vector3,
 			F3 = THREE.Face3,
 			CANVAS,
+
 			COLOR = {
 			BLACK: 0,
 			GREEN: 1,
@@ -1160,9 +1162,18 @@
 				posY : 0
 			};
 
-			this.selectedId = TYPE.GROUND;
-			var self = this;
+			this.spawn = {x:0, y:0};
 
+			this.selectNode = null;
+			this.selectedColor = 0;
+			this.selectedType = TYPE.GROUND;
+			this.selectedId = 0;
+
+			var rules = document.getElementById('style').sheet.rules;
+			this.ruleGeo = rules[0].style;
+			this.ruleFrame = rules[1].style;
+
+			var self = this;
 			this.mouseMove = function(e){
 				if(!self.mouse.isDown)
 					return;
@@ -1205,10 +1216,102 @@
 				self.mouse.isDown = false;
 			};
 
-			this.bindBuildBox();
+			window.addEventListener('load', function(){
+				self.bindBuildBox(self);
+			}, false);
 		}
 
 		Builder.prototype = {
+			bindBuildBox : function(self){
+				this.selectNode = document.getElementById('craftColor').getElementsByTagName('span')[0];
+
+				document.getElementById('craftColor').addEventListener('click', function(e){
+					var color = e.target.className.split(' ')[0];
+
+					if(COLOR[color] === undefined)
+						return;
+
+					self.selectedColor = COLOR[color];
+					self.updateSelectedId();
+
+					e.target.className = color +' select';
+
+					if(self.selectNode !== null)
+						self.selectNode.className = self.selectNode.className.split(' ')[0];
+
+					self.selectNode = e.target;
+				}, false);
+
+				document.getElementById('craftGeo').addEventListener('click', function(e){
+					var off = Math.floor(e.offsetX/60)*60;
+					self.ruleFrame.left = off +'px';
+					self.ruleGeo.backgroundPosition = '-'+ off +'px 0px';
+
+					off /= 60;
+					switch(off){
+						case 0: case 1: self.selectedType = off;
+							break;
+						case 2: case 3: self.selectedType = 3 + (off-2)*8;
+					}
+					 
+					 console.log(off);
+					self.updateSelectedId();
+				}, false);
+
+				self.ruleGeo.background = 'url('+ self.getBGGeo() +')';
+			},
+
+			getBGGeo : function(){
+				var canvas = document.createElement('canvas');
+				canvas.height = 60;
+				canvas.width = 240;
+				var ctx = canvas.getContext('2d');
+				ctx.fillRect(0,0,240,60);
+
+				var list = [
+					['#aaa',5,40, 27,50, 54,40, 32,30],
+
+					['#aaa',87,30, 114,20, 92,10, 65,20],
+					['#888',65,20, 65,45, 87,55, 87,30],
+					['#555',87,30, 87,55, 114,45, 114,20],
+
+					['#aaa',152,30, 125,40, 137,40, 152,34],
+					['#888',152,30, 152,34, 163,40, 174,40],
+					['#333',174,40, 163,40, 147,46, 147,50],
+					['#555',147,50, 147,46, 137,40, 125,40],
+
+					['#aaa',204,27, 212,27, 216,23, 208,23],
+					['#888',212,27, 204,27, 204,35, 212,35],
+					['#555',216,23, 212,27, 212,35, 216,31]
+				];
+
+				for(var i=0, s; i<list.length; i++){
+					s = list[i];
+					ctx.fillStyle =s[0];
+
+					ctx.beginPath();
+						ctx.moveTo(s[1], s[2]);
+						ctx.lineTo(s[3], s[4]);
+						ctx.lineTo(s[5], s[6]);
+						ctx.lineTo(s[7], s[8]);
+					ctx.fill();
+					ctx.closePath();
+				}
+
+				console.log(canvas.toDataURL());
+				return canvas.toDataURL(canvas.toDataURL());
+			},
+
+			updateSelectedId : function(){
+				if(this.selectedType<2)
+					this.selectedId = this.selectedType;
+
+				else
+					this.selectedId = this.selectedType + this.selectedColor;
+
+				console.log(this.selectedId);
+			},
+
 			craftDefault : function(){
 				this.buildArea = [];
 
@@ -1306,16 +1409,6 @@
 				window.removeEventListener('mousedown', this.mouseDown, false);
 				window.removeEventListener('mouseup', this.mouseUp, false);
 				window.removeEventListener('mousemove', this.mouseMove, false);
-			},
-
-			bindBuildBox : function(){
-
-
-
-
-
-
-				
 			}
 		};
 
@@ -1375,14 +1468,14 @@
 <body>
 	<div id='craftBox'>
 		<div id='craftColor'>
-			<span class='black'></span>
-			<span class='green select'></span>
-			<span class='red'></span>
-			<span class='yellow'></span>
-			<span class='blue'></span>
-			<span class='cyan'></span>
-			<span class='violet'></span>
-			<span class='white'></span>
+			<span class='BLACK select'></span>
+			<span class='GREEN'></span>
+			<span class='RED'></span>
+			<span class='YELLOW'></span>
+			<span class='BLUE'></span>
+			<span class='CYAN'></span>
+			<span class='VIOLET'></span>
+			<span class='WHITE'></span>
 		</div>
 		<div id='craftGeo'>
 			<span></span>
