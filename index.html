@@ -110,7 +110,6 @@
 			margin:3px;
 		}
 
-
 	</style>
 	<script type="text/javascript" charset="UTF-8" src="three.min.js"></script>
 	<script>
@@ -123,7 +122,7 @@
 			CANVAS,
 
 			LEVELS = [
-				"KKAADAAAAMAAAAAAAAAAAAAAAAAAAAAAAAAAMAAMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+				"FFAAGAAAMAMAABAAMBBBMAABAAMAMAA",
 				"KKAAAAAAAAAAAAAAAAAAAAAAAAAIDFAAAAAAGFBGIAAAAADBBBDBBBBAIGBFGAAAAAAFDIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
 				"KKAAAAAAAAAAAAAAAAAAAAAAAAAIDFAAAAAAGFBGIAAAAADBBBDBBBBAIGBFGAAAAAAFDIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
 				"KKAAAAAAAAAAAAAAAAAAAAAAAAAIDFAAAAAAGFBGIAAAAADBBBDBBBBAIGBFGAAAAAAFDIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
@@ -638,17 +637,21 @@
 					map.reset();
 			},
 
+			setColor : function(color){
+					snake.color = color;
+					snake.mat.uniforms.color.value = COLOR.RGB[ color];
+			},
+
 			reset : function(){
 				this.maxLength = 5;
 				this.parts = [map.spawn];
 				this.dir = -1;
 
-				this.color = COLOR.GREEN;
+				this.setColor(COLOR.GREEN);
 				this.pos.x = map.spawn.x;
 				this.pos.y = map.spawn.y;
 
 				var mesh = renderManager.craftMesh(TYPE.LIST[TYPE.SNAKE], map.spawn.x, map.spawn.y);
-				this.mat.uniforms.color.value = COLOR.RGB[ this.color];
 
 				animationManager.pushAnimation(mesh, {
 					'scale': {from: new V3(.05,.05,.05), to: new V3(1,1,1)}
@@ -879,10 +882,7 @@
 
 		ColorSwaper.prototype =	{
 			moveIn : function(snake, mesh){
-				if(snake.color !== this.color){
-					snake.color = this.color;
-					snake.mat.uniforms.color.value = COLOR.RGB[ this.color];
-				}
+				snake.setColor(this.color);
 
 				animationManager.pushAnimation(
 					mesh,{
@@ -1191,9 +1191,7 @@
 				posY : 0
 			};
 
-			//this.craftDefault();
-
-			this.spawn = {x:-1, y:-1};
+			this.spawn = {x:0, y:0};
 
 			this.selectNode = null;
 			this.selectedColor = 0;
@@ -1341,14 +1339,16 @@
 			},
 
 			export : function(){
-				if(this.spawn.x === -1 || this.dot)
+				if(this.dotCount === 0)
+					return 'if faut au moins 1 point';
 
 				var list = [];
-				list.push(this.height, this.width, this.spawn.x, this.spawn.y, this.dots&31, this.dots>>5);
+				list.push(this.height, this.width, this.spawn.x, this.spawn.y, this.dotCount&31, this.dotCount>>5);
 				for(var i=0, j; i<this.buildArea.length; i++)
 					for(j=0; j<this.buildArea[i].length; j++)
 						list.push(this.buildArea[i][j].data);
 
+				list[this.spawn.x +this.spawn.y *this.width] = 0;
 				return arrayToString(list);
 			},
 
@@ -1361,20 +1361,29 @@
 			},
 
 			craftDefault : function(){
+				this.spawn.y = this.spawn.x = 0;
 				this.dotCount = 0;
 				this.buildArea = [];
 
+				var mesh;
 				for(var i=0, j, mesh; i<this.width; i++){
 					this.buildArea.push([]);
 
 					for(j=0; j<this.height; j++){
-						var mesh = TYPE.LIST[TYPE.GROUND].mesh.clone();
+						mesh = TYPE.LIST[TYPE.GROUND].mesh.clone();
 						mesh.position.x = i;
 						mesh.position.z = j;
 
 						this.buildArea[i].push({data: 0, meshes:[ mesh ]});
 					}
 				}
+
+				this.buildArea[0][0].data = TYPE.SNAKE;
+
+				mesh = TYPE.LIST[TYPE.SNAKE].mesh.clone();
+				mesh.position.x = this.spawn.x;
+				mesh.position.z = this.spawn.y;
+				this.buildArea[0][0].meshes.push(mesh);
 			},
 
 			addMesh : function(id, x, y){
@@ -1387,18 +1396,33 @@
 			},
 
 			updatePos : function(typeId, x, y){
+				if(x === this.spawn.x && y === this.spawn.y)
+					return;
+
+
 				this.clearPos(this.buildArea[x][y]);
 
 				if(typeId === TYPE.WALL || typeId === TYPE.GROUND)
 					this.buildArea[x][y].meshes.push( this.addMesh(typeId, x, y) );
 
-				else
+				else{
+					if(typeId === TYPE.SNAKE){
+						if(this.spawn.x !== -1){
+							var posA = this.buildArea[this.spawn.x][this.spawn.y];
+							this.clearPos(posA);
+							posA.meshes.push( this.addMesh(TYPE.GROUND, this.spawn.x, this.spawn.y) );
+							posA.data = 0;
+						}
+
+						this.spawn.x = x;
+						this.spawn.y = y;
+					}
+
 					this.buildArea[x][y].meshes.push(
 						this.addMesh(TYPE.GROUND, x, y),
 						this.addMesh(typeId, x, y)
 					);
-
-
+				}
 				if(this.buildArea[x][y].data > 10 && this.buildArea[x][y].data < 19)
 					this.dotCount--;
 				if(typeId > 10 && typeId < 19)
@@ -1450,6 +1474,7 @@
 			clearPos : function(pos){
 				for(var i=0; i<pos.meshes.length; i++)
 					renderManager.clearMesh(pos.meshes[i]);
+				pos.meshes.splice(0);
 			},
 
 			clearArea : function(){
@@ -1501,8 +1526,6 @@
 
 		var self = this;
 		window.addEventListener('load',function(){self.init(self);},false);
-
-		//craftBox // inGame // mainMenu // levelSelect // craftMenu
 	}
 
 	ActionManager.prototype = {
@@ -1535,6 +1558,7 @@
 				self.setActive(GUI.LEVELSELECT);
 			};
 			document.getElementsByClassName('build')[0].onclick = function(){
+				snake.setColor(COLOR.GREEN);
 				builder.renderArea();
 				builder.bindEvent();
 				renderManager.renderFrame();
@@ -1551,10 +1575,10 @@
 			window.addEventListener('keydown', function(e){self.keyDown(e);}, false);
 
 			document.getElementById('levelHeight').addEventListener('change', function(){
-				builder.setSize(this.value, builder.width);console.log('rick');
+				builder.setSize(parseInt(this.value), builder.width);
 			});
 			document.getElementById('levelWidth').addEventListener('change', function(){
-				builder.setSize(builder.height, this.value);
+				builder.setSize(builder.height, parseInt(this.value));
 			});
 
 
@@ -1650,7 +1674,7 @@
 			}
 		}
 	};
-	
+
 
 //- MAIN
 		var snake = new Snake();
@@ -1716,8 +1740,8 @@
 		</div>
 	</div>
 
-
 	<div id='guiPlayer' style='display:none;'>0</div>
+
 	<div id='inGame' style='display:none;'>
 		<button class='quit'>quitter</button>
 	</div>
@@ -1736,8 +1760,8 @@
 		<button class='quit'>quitter</button>
 		<button class='clear'>clear</button>
 		<input id='levelData' type='text'><br/>
-		hauteur: <input id='levelHeight' type='number' value='10' MIN=10 MAX=30>
-		largeur: <input id='levelWidth' type='number' value='10' MIN=10 MAX=30><br/>
+		hauteur: <input id='levelHeight' type='number' value='10' MIN=5 MAX=30>
+		largeur: <input id='levelWidth' type='number' value='10' MIN=5 MAX=30><br/>
 	</div>
 </body>
 </html>
