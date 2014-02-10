@@ -22,17 +22,21 @@
 		body{
 			height:0px;
 			width:0px;
-			overflow:hidden;
+
 			margin:0px;
 		}
 
+		body div{
+			position:absolute;
+
+		}
+
 		canvas{
-			position: fixed;
+			position: absolute;
 			top:0px;
 			left:0px;
 			height:100%;
 			width:100%;
-			z-index:-1;
 		}
 
 		div#craftBox{
@@ -98,27 +102,50 @@
 			F3 = THREE.Face3,
 			CANVAS,
 
-			COLOR = {
-			BLACK: 0,
-			GREEN: 1,
-			RED: 2,
-			YELLOW: 3,
-			BLUE: 4,
-			CYAN: 5,
-			VIOLET: 6,
-			WHITE: 7,
+			LEVELS = [
+				"KKAAAAAAAAAAAAAAAAAAAAAAAAAIDFAAAAAAGFBGIAAAAADBBBDBBBBAIGBFGAAAAAAFDIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+				"KKAAAAAAAAAAAAAAAAAAAAAAAAAIDFAAAAAAGFBGIAAAAADBBBDBBBBAIGBFGAAAAAAFDIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+				"KKAAAAAAAAAAAAAAAAAAAAAAAAAIDFAAAAAAGFBGIAAAAADBBBDBBBBAIGBFGAAAAAAFDIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+				"KKAAAAAAAAAAAAAAAAAAAAAAAAAIDFAAAAAAGFBGIAAAAADBBBDBBBBAIGBFGAAAAAAFDIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+				"KKAAAAAAAAAAAAAAAAAAAAAAAAAIDFAAAAAAGFBGIAAAAADBBBDBBBBAIGBFGAAAAAAFDIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+				"KKAAAAAAAAAAAAAAAAAAAAAAAAAIDFAAAAAAGFBGIAAAAADBBBDBBBBAIGBFGAAAAAAFDIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+				"KKAAAAAAAAAAAAAAAAAAAAAAAAAIDFAAAAAAGFBGIAAAAADBBBDBBBBAIGBFGAAAAAAFDIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+				"KKAAAAAAAAAAAAAAAAAAAAAAAAAIDFAAAAAAGFBGIAAAAADBBBDBBBBAIGBFGAAAAAAFDIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+				"KKAAAAAAAAAAAAAAAAAAAAAAAAAIDFAAAAAAGFBGIAAAAADBBBDBBBBAIGBFGAAAAAAFDIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+				"KKAAAAAAAAAAAAAAAAAAAAAAAAAIDFAAAAAAGFBGIAAAAADBBBDBBBBAIGBFGAAAAAAFDIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+				"KKAAAAAAAAAAAAAAAAAAAAAAAAAIDFAAAAAAGFBGIAAAAADBBBDBBBBAIGBFGAAAAAAFDIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+			],
 
-			RGB:[
-				new V3(0,0,0),
-				new V3(1/255*40, 1/255*180, 1/255*20),
-				new V3(1,0,0),
-				new V3(1,1,0),
-				new V3(0,0,1),
-				new V3(0,1,1),
-				new V3(1,0,1),
-				new V3(1,1,1)
-			]
-		};
+			GUI = {
+				MAIN : 0,
+				GUIPLAYER : 1,
+				INGAME : 2,
+				LEVELSELECT : 3,
+				CRAFTBOX : 4,
+				CRAFTMENU : 5
+			},
+
+			COLOR = {
+				BLACK: 0,
+				GREEN: 1,
+				RED: 2,
+				YELLOW: 3,
+				BLUE: 4,
+				CYAN: 5,
+				VIOLET: 6,
+				WHITE: 7,
+
+				RGB:[
+					new V3(0,0,0),
+					new V3(1/255*40, 1/255*180, 1/255*20),
+					new V3(1,0,0),
+					new V3(1,1,0),
+					new V3(0,0,1),
+					new V3(0,1,1),
+					new V3(1,0,1),
+					new V3(1,1,1)
+				]
+			};
 
 		var GEO = {
 			snakePart: (function(){
@@ -328,7 +355,7 @@
 		};
 
 		var MAT = {
-			sneakColor : (function(){
+			snakeColor : (function(){
 				var vert = [
 					"#ifdef GL_ES",
 					"precision mediump float;",
@@ -491,6 +518,7 @@
 			this.maxLength = 5;
 			this.speed = 400;
 			this.nextMove = 0;
+			this.paused = false;
 
 			this.dir = -1;
 			this.parts = [];
@@ -604,7 +632,7 @@
 				},400, 0);
 
 				map.grid[map.spawn.x][map.spawn.y] = TYPE.LIST[TYPE.SNAKE];
-				keyBinder.paused = false;
+				snake.paused = false;
 			}
 		};
 
@@ -723,47 +751,6 @@
 		};
 
 
-//- KEYBINDER
-		function KeyBinder(){
-			this.paused = false;
-
-			var self = this;
-			window.addEventListener('keydown', function(e){
-				if(self.paused)
-					return;
-
-				switch(e.keyCode){
-					case 90: case 87: case 38:
-							snake.setDir(0);
-						break;
-
-					case 83: case 40:
-							snake.setDir(2);
-						break;
-
-					case 81: case 65: case 37:
-							snake.setDir(1);
-						break;
-
-					case 68: case 39:
-							snake.setDir(3);
-						break;
-
-					case 80:
-							//TODO pause
-						break;
-				}
-			}, false);
-		}
-
-		KeyBinder.prototype = {
-			bind : function(type, call){
-
-
-			}
-		};
-
-
 //- ANIMATION
 		function AnimationManager(){
 			this.list = [];
@@ -844,7 +831,7 @@
 			},
 
 			craftMesh : function(){
-				var mat = MAT.sneakColor.clone();
+				var mat = MAT.snakeColor.clone();
 				this.color = mat.uniforms.color.value = COLOR.RGB[ COLOR.GREEN ];
 
 				return new THREE.Mesh(GEO.snakePart, mat);
@@ -1013,7 +1000,9 @@
 			this.renderer.setClearColor( 0x888888, 1);
 
 			this.scene = new THREE.Scene();
-			this.grid;
+
+			this.grid=[];
+			this.ground=[];
 
 			CANVAS = this.renderer.domElement;
 			this.onRun = false;
@@ -1063,6 +1052,9 @@
 			},
 
 			initGrid : function(height, width){
+				this.clearGrid();
+				this.clearGround();
+
 				this.grid = [];
 				this.ground = [];
 
@@ -1174,7 +1166,7 @@
 			this.selectedType = TYPE.GROUND;
 			this.selectedId = 0;
 
-			var rules = document.getElementById('style').sheet.rules;
+			var rules = document.getElementById('style').sheet.cssRules;
 			this.ruleGeo = rules[0].style;
 			this.ruleFrame = rules[1].style;
 
@@ -1443,34 +1435,121 @@
 			};
 		};
 
+
 //- ACTIONMANAGER
-
 	function ActionManager(){
+		this.active = GUI.MAIN;
+		this.activeNode = null;
+		this.list = [];
 
+		var self = this;
+		window.addEventListener('load',function(){self.init(self);},false);
 
+		//craftBox // inGame // mainMenu // levelSelect // craftMenu
 	}
 
 	ActionManager.prototype = {
+		init : function(self){
+			var levelList = document.getElementById('levelList');
+			var result = "";
+
+			for(var i=0; i<LEVELS.length; i++)
+				result+="<span>"+i+"</span>";
+
+			levelList.innerHTML = result;
+			levelList.addEventListener('click', function(e){self.selectLevel(e);}, false);
+			levelList.firstChild.className='active';
+
+			var list = document.getElementsByClassName('quit');
+			for(var i=0; i<list.length; i++)
+				list.onclick = function(){self.quit();};
 
 
+			this.list = [
+				document.getElementById('mainMenu'),
+				document.getElementById('guiPlayer'),
+				document.getElementById('inGame'),
+				document.getElementById('levelSelect'),
+				document.getElementById('craftBox'),
+				document.getElementById('craftMenu')
+			];
+
+			document.getElementsByClassName('play')[0].onclick = function(){self.setActive(GUI.LEVELSELECT);};
+			document.getElementsByClassName('build')[0].onclick = function(){self.setActive(GUI.CRAFTBOX);};
+
+			this.activeNode = document.getElementById('mainMenu');
+		},
+
+		setActive : function(guiId){
+			this.activeNode.style.display = 'none';
+			this.list[guiId].style.display = '';
+		},
+
+		selectLevel : function(e){
+			if(e.target.localName !== 'span')
+				return;
+
+			var index = e.target.firstChild.data;
+		},
+
+		quit : function(){
+			switch(this.active){
+				case GUI.CRAFTMENU:
+						builder.clearArea();
+					break;
+				case GUI.INGAME:
+						renderManager.clearGrid();
+						renderManager.clearGround();
+					break;
+			}
+
+			this.setActive(GUI.MAIN);
+		},
+
+		snakeDir : function(e){
+			if(snake.paused)
+				return;
+
+			switch(e.keyCode){
+				case 90: case 87: case 38:
+						snake.setDir(0);
+					break;
+
+				case 83: case 40:
+						snake.setDir(2);
+					break;
+
+				case 81: case 65: case 37:
+						snake.setDir(1);
+					break;
+
+				case 68: case 39:
+						snake.setDir(3);
+					break;
+
+				case 80:
+						//TODO pause
+					break;
+			}
+		}
 	};
-
+	
 
 //- MAIN
 		var snake = new Snake();
 		var map = new Map();
-		var keyBinder = new KeyBinder();
 		var renderManager = new RenderManager();
 		var animationManager = new AnimationManager();
 		var builder = new Builder();
+		var actionManager = new ActionManager();
 
 		window.addEventListener('load', function(){
 			document.body.insertBefore(CANVAS, document.body.firstChild);
-			builder.craftDefault();
+			/*builder.craftDefault();
 			builder.bindEvent();
 			map.updateData("KKAAAAAAAAAAAAAAAAAAAAAAAAAIDFAAAAAAGFBGIAAAAADBBBDBBBBAIGBFGAAAAAAFDIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
 
-
+*/
 			renderManager.cam.position.y = 5;
 			renderManager.cam.position.x = 1;
 			renderManager.cam.position.z = 1;
@@ -1510,7 +1589,7 @@
 	</script>
 </head>
 <body>
-	<div id='craftBox'>
+	<div id='craftBox' style='display:none;'>
 		<div id='craftColor'>
 			<span class='BLACK select'></span>
 			<span class='GREEN'></span>
@@ -1521,9 +1600,29 @@
 			<span class='VIOLET'></span>
 			<span class='WHITE'></span>
 		</div>
-		<div id='craftGeo'>
+		<div id='craftGeo' style='display:none;'>
 			<span></span>
 		</div>
+	</div>
+
+
+	<div id='guiPlayer' style='display:none;'>0</div>
+	<div id='inGame' style='display:none;'>
+		<button class='quit'>quitter</button>
+	</div>
+
+	<div id='mainMenu'>
+		<button class='play'>jouer</button>
+		<button class='build'>créer</button>
+	</div>
+
+	<div id='levelSelect' style='display:none;'>
+		<div id='levelList'></div>
+		<button class='quit'>quitter</button>
+	</div>
+
+	<div id='craftMenu' style='display:none;'>
+		<button class='quit'>quitter</button>
 	</div>
 </body>
 </html>
