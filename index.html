@@ -47,7 +47,7 @@
 
 
 		div#craftGeo:hover{
-			width:240px;
+			width:300px;
 			background-position:0px 0px;
 		}	
 
@@ -91,6 +91,26 @@
 		span.VIOLET{ background-color:magenta;}
 		span.WHITE{ background-color:white;}
 
+		div#levelList{
+			top:25px;
+			width:270px;
+		}
+
+		div#levelList span.active{
+			background-color:rgba(255,255,255,.5);
+		}
+
+		div#levelList span{
+			display: inline-block;
+			text-align: center;
+			padding-top:10px;
+			height:20px;
+			width:30px;
+			border:solid 1px black;
+			margin:3px;
+		}
+
+
 	</style>
 	<script type="text/javascript" charset="UTF-8" src="three.min.js"></script>
 	<script>
@@ -103,7 +123,7 @@
 			CANVAS,
 
 			LEVELS = [
-				"KKAAAAAAAAAAAAAAAAAAAAAAAAAIDFAAAAAAGFBGIAAAAADBBBDBBBBAIGBFGAAAAAAFDIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+				"KKAADAAAAMAAAAAAAAAAAAAAAAAAAAAAAAAAMAAMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
 				"KKAAAAAAAAAAAAAAAAAAAAAAAAAIDFAAAAAAGFBGIAAAAADBBBDBBBBAIGBFGAAAAAAFDIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
 				"KKAAAAAAAAAAAAAAAAAAAAAAAAAIDFAAAAAAGFBGIAAAAADBBBDBBBBAIGBFGAAAAAAFDIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
 				"KKAAAAAAAAAAAAAAAAAAAAAAAAAIDFAAAAAAGFBGIAAAAADBBBDBBBBAIGBFGAAAAAAFDIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
@@ -660,8 +680,7 @@
 				this.height = result[0];
 				this.width = result[1];
 				this.spawn = {x: result[2]+1, y: result[3]+1};
-				this.dotCount = result[4];
-
+				this.dotCount = result[4]+ (result[5]<<5);
 				//TODO clearAll RM
 				renderManager.initGrid(this.height+2, this.width+2);
 
@@ -675,7 +694,7 @@
 						if(i<0 || j<0 || i>=this.width || j>=this.height)
 							select = TYPE.LIST[ TYPE.WALL ];
 						else
-							select = TYPE.LIST[ result[i*this.width +j +5] ];
+							select = TYPE.LIST[ result[i*this.width +j +6] ];
 
 
 						if(select !== undefined){
@@ -714,8 +733,12 @@
 			updateDotCount : function(offset){
 				this.dotCount += offset;
 
-				if(this.dotCount <= 0)
+				if(this.dotCount <= 0){
 					actionManager.startNextLevel();
+					return false;
+				}
+
+				return true;
 			},
 
 			reset : function(){
@@ -742,7 +765,7 @@
 
 						for(var i=0, j; i<map.width; i++)
 							for(var j=0; j<map.height; j++){
-								select = TYPE.LIST[ map.ld[i*map.width +j +5] ];
+								select = TYPE.LIST[ map.ld[i*map.width +j +6] ];
 
 								if(select !== undefined)
 									if(select.ground !== true){
@@ -943,7 +966,6 @@
 			moveIn : function(snake, mesh){
 				if(snake.color === this.color){
 					snake.maxLength++;
-					map.dotCount--;
 
 					animationManager.pushAnimation(
 					mesh,{
@@ -952,7 +974,7 @@
 						renderManager.clearMesh(mesh);
 					});
 
-					return true;
+					return map.updateDotCount(-1);
 
 				}else
 					return false;
@@ -1159,7 +1181,7 @@
 			this.buildArea = [];
 			this.height = 10;
 			this.width = 10;
-			this.dots = 0;
+			this.dotCount = 0;
 
 			this.mouse = {
 				isDown : false,
@@ -1169,9 +1191,9 @@
 				posY : 0
 			};
 
-			this.craftDefault();
+			//this.craftDefault();
 
-			this.spawn = {x:0, y:0};
+			this.spawn = {x:-1, y:-1};
 
 			this.selectNode = null;
 			this.selectedColor = 0;
@@ -1182,7 +1204,7 @@
 			this.ruleGeo = rules[0].style;
 			this.ruleFrame = rules[1].style;
 
-			this.init
+			this.craftDefault();
 
 			var self = this;
 			this.mouseMove = function(e){
@@ -1263,6 +1285,9 @@
 						case 0: case 1: self.selectedType = off;
 							break;
 						case 2: case 3: self.selectedType = 3 + (off-2)*8;
+							break;
+						case 4: self.selectedType = 2;
+							break;
 					}
 					 
 					self.updateSelectedId();
@@ -1274,9 +1299,9 @@
 			getBGGeo : function(){
 				var canvas = document.createElement('canvas');
 				canvas.height = 60;
-				canvas.width = 240;
+				canvas.width = 300;
 				var ctx = canvas.getContext('2d');
-				ctx.fillRect(0,0,240,60);
+				ctx.fillRect(0,0,300,60);
 
 				var list = [
 					['#aaa',5,40, 27,50, 54,40, 32,30],
@@ -1292,7 +1317,11 @@
 
 					['#aaa',204,27, 212,27, 216,23, 208,23],
 					['#888',212,27, 204,27, 204,35, 212,35],
-					['#555',216,23, 212,27, 212,35, 216,31]
+					['#555',216,23, 212,27, 212,35, 216,31],
+
+					['#aaa',264,27, 272,27, 281,18, 273,18],
+					['#888',272,27, 264,27, 264,35, 272,35],
+					['#555',281,18, 272,27, 272,35, 281,26],
 				];
 
 				for(var i=0, s; i<list.length; i++){
@@ -1312,8 +1341,10 @@
 			},
 
 			export : function(){
+				if(this.spawn.x === -1 || this.dot)
+
 				var list = [];
-				list.push(this.height, this.width, this.spawn.x, this.spawn.y, this.dots);
+				list.push(this.height, this.width, this.spawn.x, this.spawn.y, this.dots&31, this.dots>>5);
 				for(var i=0, j; i<this.buildArea.length; i++)
 					for(j=0; j<this.buildArea[i].length; j++)
 						list.push(this.buildArea[i][j].data);
@@ -1330,16 +1361,19 @@
 			},
 
 			craftDefault : function(){
-				this.dots = 0;
+				this.dotCount = 0;
 				this.buildArea = [];
 
-				for(var i=0,j; i<this.width; i++){
+				for(var i=0, j, mesh; i<this.width; i++){
 					this.buildArea.push([]);
 
-					for(j=0; j<this.height; j++)
-						this.buildArea[i].push({data: 0, meshes:[
-								this.addMesh(TYPE.GROUND, i, j)
-							]});
+					for(j=0; j<this.height; j++){
+						var mesh = TYPE.LIST[TYPE.GROUND].mesh.clone();
+						mesh.position.x = i;
+						mesh.position.z = j;
+
+						this.buildArea[i].push({data: 0, meshes:[ mesh ]});
+					}
 				}
 			},
 
@@ -1355,7 +1389,7 @@
 			updatePos : function(typeId, x, y){
 				this.clearPos(this.buildArea[x][y]);
 
-				if(typeId === TYPE.wall || typeId === TYPE.GROUND)
+				if(typeId === TYPE.WALL || typeId === TYPE.GROUND)
 					this.buildArea[x][y].meshes.push( this.addMesh(typeId, x, y) );
 
 				else
@@ -1363,6 +1397,12 @@
 						this.addMesh(TYPE.GROUND, x, y),
 						this.addMesh(typeId, x, y)
 					);
+
+
+				if(this.buildArea[x][y].data > 10 && this.buildArea[x][y].data < 19)
+					this.dotCount--;
+				if(typeId > 10 && typeId < 19)
+					this.dotCount++;
 
 				this.buildArea[x][y].data = typeId;
 			},
@@ -1404,6 +1444,7 @@
 				}
 
 				this.width = width;
+				renderManager.renderFrame();
 			},
 
 			clearPos : function(pos){
@@ -1427,13 +1468,13 @@
 					}
 			},
 
-			bindEvent : function(){console.log('bind');
+			bindEvent : function(){
 				window.addEventListener('mousedown', this.mouseDown, false);
 				window.addEventListener('mouseup', this.mouseUp, false);
 				window.addEventListener('mousemove', this.mouseMove, false);
 			},
 
-			clearEvent : function(){console.log('unbind');
+			clearEvent : function(){
 				window.removeEventListener('mousedown', this.mouseDown, false);
 				window.removeEventListener('mouseup', this.mouseUp, false);
 				window.removeEventListener('mousemove', this.mouseMove, false);
@@ -1509,6 +1550,14 @@
 
 			window.addEventListener('keydown', function(e){self.keyDown(e);}, false);
 
+			document.getElementById('levelHeight').addEventListener('change', function(){
+				builder.setSize(this.value, builder.width);console.log('rick');
+			});
+			document.getElementById('levelWidth').addEventListener('change', function(){
+				builder.setSize(builder.height, this.value);
+			});
+
+
 			snake.paused = true;
 			this.activeNode = document.getElementById('mainMenu');
 		},
@@ -1521,7 +1570,7 @@
 		},
 
 		selectLevel : function(e){
-			if(e.target.localName !== 'span')
+			if(e.target.localName !== 'span' || e.target.className !== 'active')
 				return;
 
 			var index = e.target.firstChild.data;
@@ -1535,6 +1584,7 @@
 			this.currentLevel++;
 			if(LEVELS.length > this.currentLevel){
 				map.updateData(LEVELS[this.currentLevel]);
+				document.getElementById('levelList').childNodes[this.currentLevel].className='active';
 			}else{
 				console.log('end');
 			}
@@ -1545,6 +1595,7 @@
 				case GUI.CRAFTMENU:
 						builder.clearArea();
 						builder.clearEvent();
+						renderManager.renderFrame();
 					break;
 				case GUI.INGAME:
 						renderManager.stopUpdate();
@@ -1578,13 +1629,14 @@
 							snake.setDir(3);
 					break;
 
-				case 80:
+				case 80: case 27:
 						switch(this.active){
 							case GUI.GUIPLAYER:
 									snake.paused = true;
 									this.setActive(GUI.INGAME);
 								break;
 							case GUI.CRAFTBOX:
+									document.getElementById('levelData').value = builder.export();
 									this.setActive(GUI.CRAFTMENU);
 								break;
 							case GUI.INGAME:
@@ -1683,6 +1735,9 @@
 	<div id='craftMenu' style='display:none;'>
 		<button class='quit'>quitter</button>
 		<button class='clear'>clear</button>
+		<input id='levelData' type='text'><br/>
+		hauteur: <input id='levelHeight' type='number' value='10' MIN=10 MAX=30>
+		largeur: <input id='levelWidth' type='number' value='10' MIN=10 MAX=30><br/>
 	</div>
 </body>
 </html>
