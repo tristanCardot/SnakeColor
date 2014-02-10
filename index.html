@@ -518,7 +518,7 @@
 			this.maxLength = 5;
 			this.speed = 400;
 			this.nextMove = 0;
-			this.paused = false;
+			this.paused = true;
 
 			this.dir = -1;
 			this.parts = [];
@@ -559,6 +559,9 @@
 			},
 
 			update : function(delta){
+				if(this.paused)
+					return;
+
 				this.nextMove-=delta;
 				if(this.nextMove>0)
 					return;
@@ -708,8 +711,15 @@
 				this.grid[x][y] = type;
 			},
 
+			updateDotCount : function(offset){
+				this.dotCount += offset;
+
+				if(this.dotCount <= 0)
+					actionManager.startNextLevel();
+			},
+
 			reset : function(){
-				keyBinder.paused = true;
+				snake.paused = true;
 				snake.dir = -1;
 
 				this.dotCount = this.ld[4];
@@ -1159,6 +1169,8 @@
 				posY : 0
 			};
 
+			this.craftDefault();
+
 			this.spawn = {x:0, y:0};
 
 			this.selectNode = null;
@@ -1169,6 +1181,8 @@
 			var rules = document.getElementById('style').sheet.cssRules;
 			this.ruleGeo = rules[0].style;
 			this.ruleFrame = rules[1].style;
+
+			this.init
 
 			var self = this;
 			this.mouseMove = function(e){
@@ -1316,6 +1330,7 @@
 			},
 
 			craftDefault : function(){
+				this.dots = 0;
 				this.buildArea = [];
 
 				for(var i=0,j; i<this.width; i++){
@@ -1412,13 +1427,13 @@
 					}
 			},
 
-			bindEvent : function(){
+			bindEvent : function(){console.log('bind');
 				window.addEventListener('mousedown', this.mouseDown, false);
 				window.addEventListener('mouseup', this.mouseUp, false);
 				window.addEventListener('mousemove', this.mouseMove, false);
 			},
 
-			clearEvent : function(){
+			clearEvent : function(){console.log('unbind');
 				window.removeEventListener('mousedown', this.mouseDown, false);
 				window.removeEventListener('mouseup', this.mouseUp, false);
 				window.removeEventListener('mousemove', this.mouseMove, false);
@@ -1441,6 +1456,7 @@
 		this.active = GUI.MAIN;
 		this.activeNode = null;
 		this.list = [];
+		this.currentLevel = 0;
 
 		var self = this;
 		window.addEventListener('load',function(){self.init(self);},false);
@@ -1462,8 +1478,7 @@
 
 			var list = document.getElementsByClassName('quit');
 			for(var i=0; i<list.length; i++)
-				list.onclick = function(){self.quit();};
-
+				list[i].onclick = function(){self.quit();};
 
 			this.list = [
 				document.getElementById('mainMenu'),
@@ -1474,15 +1489,35 @@
 				document.getElementById('craftMenu')
 			];
 
-			document.getElementsByClassName('play')[0].onclick = function(){self.setActive(GUI.LEVELSELECT);};
-			document.getElementsByClassName('build')[0].onclick = function(){self.setActive(GUI.CRAFTBOX);};
+			document.getElementsByClassName('play')[0].onclick = function(){
+				renderManager.startUpdate();
+				self.setActive(GUI.LEVELSELECT);
+			};
+			document.getElementsByClassName('build')[0].onclick = function(){
+				builder.renderArea();
+				builder.bindEvent();
+				renderManager.renderFrame();
+				self.setActive(GUI.CRAFTBOX);
+			};
+			document.getElementsByClassName('clear')[0].onclick = function(){
+				builder.clearArea();
+				builder.craftDefault();
+				builder.renderArea();
+				renderManager.renderFrame();
+				self.setActive(GUI.CRAFTBOX);
+			};
 
+			window.addEventListener('keydown', function(e){self.keyDown(e);}, false);
+
+			snake.paused = true;
 			this.activeNode = document.getElementById('mainMenu');
 		},
 
 		setActive : function(guiId){
 			this.activeNode.style.display = 'none';
 			this.list[guiId].style.display = '';
+			this.active = guiId;
+			this.activeNode = this.list[guiId];
 		},
 
 		selectLevel : function(e){
@@ -1490,14 +1525,29 @@
 				return;
 
 			var index = e.target.firstChild.data;
+			this.currentLevel = index;
+			map.updateData(LEVELS[index]);
+
+			this.setActive(GUI.GUIPLAYER);
+		},
+
+		startNextLevel : function(){
+			this.currentLevel++;
+			if(LEVELS.length > this.currentLevel){
+				map.updateData(LEVELS[this.currentLevel]);
+			}else{
+				console.log('end');
+			}
 		},
 
 		quit : function(){
 			switch(this.active){
 				case GUI.CRAFTMENU:
 						builder.clearArea();
+						builder.clearEvent();
 					break;
 				case GUI.INGAME:
+						renderManager.stopUpdate();
 						renderManager.clearGrid();
 						renderManager.clearGround();
 					break;
@@ -1506,29 +1556,44 @@
 			this.setActive(GUI.MAIN);
 		},
 
-		snakeDir : function(e){
-			if(snake.paused)
-				return;
-
+		keyDown : function(e){
 			switch(e.keyCode){
 				case 90: case 87: case 38:
-						snake.setDir(0);
+						if(!snake.paused)
+							snake.setDir(0);
 					break;
 
 				case 83: case 40:
-						snake.setDir(2);
+						if(!snake.paused)
+							snake.setDir(2);
 					break;
 
 				case 81: case 65: case 37:
-						snake.setDir(1);
+						if(!snake.paused)
+							snake.setDir(1);
 					break;
 
 				case 68: case 39:
-						snake.setDir(3);
+						if(!snake.paused)
+							snake.setDir(3);
 					break;
 
 				case 80:
-						//TODO pause
+						switch(this.active){
+							case GUI.GUIPLAYER:
+									snake.paused = true;
+									this.setActive(GUI.INGAME);
+								break;
+							case GUI.CRAFTBOX:
+									this.setActive(GUI.CRAFTMENU);
+								break;
+							case GUI.INGAME:
+									snake.paused = false;
+									this.setActive(GUI.GUIPLAYER);
+								break;
+							case GUI.CRAFTMENU:
+									this.setActive(GUI.CRAFTBOX);
+						}
 					break;
 			}
 		}
@@ -1545,11 +1610,7 @@
 
 		window.addEventListener('load', function(){
 			document.body.insertBefore(CANVAS, document.body.firstChild);
-			/*builder.craftDefault();
-			builder.bindEvent();
-			map.updateData("KKAAAAAAAAAAAAAAAAAAAAAAAAAIDFAAAAAAGFBGIAAAAADBBBDBBBBAIGBFGAAAAAAFDIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
 
-*/
 			renderManager.cam.position.y = 5;
 			renderManager.cam.position.x = 1;
 			renderManager.cam.position.z = 1;
@@ -1557,8 +1618,6 @@
 			renderManager.cam.rotation.x = -Math.PI/2;/*-Math.PI/32*14;
 			renderManager.cam.rotation.y = -Math.PI/32;*/
 			//renderManager.renderFrame();
-
-			renderManager.startUpdate();
 		}, false);
 
 		function stringToArray(string){
@@ -1600,7 +1659,7 @@
 			<span class='VIOLET'></span>
 			<span class='WHITE'></span>
 		</div>
-		<div id='craftGeo' style='display:none;'>
+		<div id='craftGeo'>
 			<span></span>
 		</div>
 	</div>
@@ -1623,6 +1682,7 @@
 
 	<div id='craftMenu' style='display:none;'>
 		<button class='quit'>quitter</button>
+		<button class='clear'>clear</button>
 	</div>
 </body>
 </html>
