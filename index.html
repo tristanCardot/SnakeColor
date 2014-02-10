@@ -20,6 +20,8 @@
 		}
 
 		body{
+			height:0px;
+			width:0px;
 			overflow:hidden;
 			margin:0px;
 		}
@@ -621,13 +623,15 @@
 
 		Map.prototype = {
 			updateData : function(ld){//ld=> LevelData TODO basic
-				this.ld = ld;
+				var result = stringToArray(ld);
+				this.ld = result;
 
-				this.height = ld.height;
-				this.width = ld.width;
-				this.dotCount = ld.dotCount;
-				this.spawn = {x: ld.spawn.x+1, y: ld.spawn.y+1};
+				this.height = result[0];
+				this.width = result[1];
+				this.spawn = {x: result[2]+1, y: result[3]+1};
+				this.dotCount = result[4];
 
+				//TODO clearAll RM
 				renderManager.initGrid(this.height+2, this.width+2);
 
 				this.grid = [];
@@ -640,7 +644,7 @@
 						if(i<0 || j<0 || i>=this.width || j>=this.height)
 							select = TYPE.LIST[ TYPE.WALL ];
 						else
-							select = TYPE.LIST[ ld.grid[i +j*ld.width] ];
+							select = TYPE.LIST[ result[i*this.width +j +5] ];
 
 
 						if(select !== undefined){
@@ -680,7 +684,7 @@
 				keyBinder.paused = true;
 				snake.dir = -1;
 
-				this.dotCount = this.ld.dotCount;
+				this.dotCount = this.ld[4];
 
 				for(var i= (snake.parts.length>25 ? snake.parts.length-25 : 0); i<snake.parts.length; i++){
 					var mesh = renderManager.grid[snake.parts[i].x][snake.parts[i].y];
@@ -700,7 +704,7 @@
 
 						for(var i=0, j; i<map.width; i++)
 							for(var j=0; j<map.height; j++){
-								select = TYPE.LIST[ map.ld.grid[i +j *map.width] ];
+								select = TYPE.LIST[ map.ld[i*map.width +j +5] ];
 
 								if(select !== undefined)
 									if(select.ground !== true){
@@ -1153,6 +1157,7 @@
 			this.buildArea = [];
 			this.height = 10;
 			this.width = 10;
+			this.dots = 0;
 
 			this.mouse = {
 				isDown : false,
@@ -1205,7 +1210,7 @@
 			};
 
 			this.mouseUp = function(e){
-				if(self.mouse.posX === self.mouse.downX && self.mouse.posY === self.mouse.downY){
+				if(e.target.localName === 'canvas' && self.mouse.posX === self.mouse.downX && self.mouse.posY === self.mouse.downY){
 					var pos = getGridPos(self.mouse.posX, self.mouse.posY);
 
 					if(pos.x>-1 && pos.x<self.width && pos.y>-1 && pos.y<self.height)
@@ -1254,7 +1259,6 @@
 						case 2: case 3: self.selectedType = 3 + (off-2)*8;
 					}
 					 
-					 console.log(off);
 					self.updateSelectedId();
 				}, false);
 
@@ -1298,8 +1302,17 @@
 					ctx.closePath();
 				}
 
-				console.log(canvas.toDataURL());
 				return canvas.toDataURL(canvas.toDataURL());
+			},
+
+			export : function(){
+				var list = [];
+				list.push(this.height, this.width, this.spawn.x, this.spawn.y, this.dots);
+				for(var i=0, j; i<this.buildArea.length; i++)
+					for(j=0; j<this.buildArea[i].length; j++)
+						list.push(this.buildArea[i][j].data);
+
+				return arrayToString(list);
 			},
 
 			updateSelectedId : function(){
@@ -1308,8 +1321,6 @@
 
 				else
 					this.selectedId = this.selectedType + this.selectedColor;
-
-				console.log(this.selectedId);
 			},
 
 			craftDefault : function(){
@@ -1394,9 +1405,19 @@
 			},
 
 			clearArea : function(){
-				for(var i=0; i<this.buildArea.length; i++)
-					for(var j=0; j<this.buildArea[i].length; j++)
+				for(var i=0, j; i<this.buildArea.length; i++)
+					for(j=0; j<this.buildArea[i].length; j++)
 						this.clearPos( this.buildArea[i][j] );
+			},
+
+			renderArea : function(){
+				for(var i=0, j, k, meshes; i<this.buildArea.length; i++)
+					for( j=0; j<this.buildArea[i].length; j++){
+						meshes = this.buildArea[i][j].meshes;
+
+						for(k=0; k<meshes.length; k++)
+							renderManager.addMesh(meshes[k]);
+					}
 			},
 
 			bindEvent : function(){
@@ -1422,6 +1443,19 @@
 			};
 		};
 
+//- ACTIONMANAGER
+
+	function ActionManager(){
+
+
+	}
+
+	ActionManager.prototype = {
+
+
+	};
+
+
 //- MAIN
 		var snake = new Snake();
 		var map = new Map();
@@ -1434,35 +1468,45 @@
 			document.body.insertBefore(CANVAS, document.body.firstChild);
 			builder.craftDefault();
 			builder.bindEvent();
-			/*map.updateData({
-				height: 20,
-				width: 20,
-				spawn: {x:0, y:0},
-				dotCount: 5,
-				grid: [
-					0,3,4,5,6, 11,12,13,14,15,
-					12,0,0,0,0, 0,0,0,0,0,
-					12,0,1,1,1, 0,0,0,0,0,
-					12,0,0,1,1, 0,0,0,0,0,
-					12,0,1,0,1, 0,0,0,1,0,
+			map.updateData("KKAAAAAAAAAAAAAAAAAAAAAAAAAIDFAAAAAAGFBGIAAAAADBBBDBBBBAIGBFGAAAAAAFDIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
 
-					12,1,0,0,0, 1,0,1,0,0,
-					12,0,0,0,0, 1,1,0,0,0,
-					12,0,0,0,0, 1,1,1,0,0,
-					12,0,0,0,0, 0,0,0,0,0,
-					12,0,0,0,0, 0,0,0,0,0
-				]});
-*/
+
 			renderManager.cam.position.y = 5;
 			renderManager.cam.position.x = 1;
 			renderManager.cam.position.z = 1;
 			renderManager.cam.rotation.order = 'YXZ';
 			renderManager.cam.rotation.x = -Math.PI/2;/*-Math.PI/32*14;
 			renderManager.cam.rotation.y = -Math.PI/32;*/
-			renderManager.renderFrame();
+			//renderManager.renderFrame();
 
-			//renderManager.startUpdate();
+			renderManager.startUpdate();
 		}, false);
+
+		function stringToArray(string){
+			var result = [];
+
+			for(var i=0, code; i<string.length; i++){
+				code = string.charCodeAt(i);
+				if(code < 97)
+					result.push(code-65);
+				else
+					result.push(code-71);
+			}
+
+			return result;
+		}
+
+		function arrayToString(array){
+			var result = "";
+
+			for(var i=0; i<array.length; i++)
+				if(array[i]<26)
+					result += String.fromCharCode(array[i]+65);
+				else
+					result += String.fromCharCode(array[i]+71);
+
+			return result;
+		}
 	</script>
 </head>
 <body>
