@@ -11,7 +11,7 @@
 			left:120px;
 			height:60px;
 			width:60px;
-			box-shadow: inset 0px 0px 1px 1px black;
+			box-shadow: inset 0px 0px 1px 1px black, 0px 0px 5px black;
 			transition:all 500ms;
 		}
 
@@ -123,9 +123,8 @@
 
 			LEVELS = [
 				"FFAAGAAAMAMAABAAMBBBMAABAAMAMAA",
-				"KKAAAAAAAAAAAAAAAAAAAAAAAAAIDFAAAAAAGFBGIAAAAADBBBDBBBBAIGBFGAAAAAAFDIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-				"KKAAAAAAAAAAAAAAAAAAAAAAAAAIDFAAAAAAGFBGIAAAAADBBBDBBBBAIGBFGAAAAAAFDIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-				"KKAAAAAAAAAAAAAAAAAAAAAAAAAIDFAAAAAAGFBGIAAAAADBBBDBBBBAIGBFGAAAAAAFDIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+				"FFCCDANAAAMAFAEAAAAABAGAAAOABAB",
+				"LLAETAAAABCANAAAAAPABAAAOAAAAAAOAAPAANAMAMAAABAABBAAABAEANAAAANAAGAFAAPAAAAAAHABAAABBOABAPAOAAAAAAAAAAAANAOAAMAABMAAAAAPAAABAAA",
 				"KKAAAAAAAAAAAAAAAAAAAAAAAAAIDFAAAAAAGFBGIAAAAADBBBDBBBBAIGBFGAAAAAAFDIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
 				"KKAAAAAAAAAAAAAAAAAAAAAAAAAIDFAAAAAAGFBGIAAAAADBBBDBBBBAIGBFGAAAAAAFDIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
 				"KKAAAAAAAAAAAAAAAAAAAAAAAAAIDFAAAAAAGFBGIAAAAADBBBDBBBBAIGBFGAAAAAAFDIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
@@ -606,10 +605,10 @@
 					map.clearPos(part.x, part.y);
 					this.parts = this.parts.splice(1);
 
-					animationManager.pushAnimation(mesh, {
-						'position': {from: new V3(part.x, 0, part.y), to: new V3(this.parts[0].x, 0, this.parts[0].y)},
-						'scale': {from: new V3(1,1,1), to: new V3(.1,.1,.1)}
-					}, this.speed, 0,
+					animationManager.pushAnimation(mesh, [
+						['position', {from: new V3(part.x, 0, part.y), to: new V3(this.parts[0].x, 0, this.parts[0].y)}],
+						['scale', {from: new V3(1,1,1), to: new V3(.1,.1,.1)}]
+					], this.speed, 0,
 					function(mesh){renderManager.clearMesh(mesh);});
 				}
 				if(map.moveIn(this)){
@@ -620,16 +619,16 @@
 					var vx = (this.dir === 1 ? 1 : this.dir === 3 ? -1 : 0);
 					var vz = (this.dir === 0 ? 1 : this.dir === 2 ? -1 : 0);
 
-					animationManager.pushAnimation(mesh, {
-						'position': {from: new V3(this.pos.x +vx *.6, 0, this.pos.y +vz *.6), to: mesh.position.clone()},
-						'scale': {from: new V3(.1,.1,.1), to: new V3(1,1,1)}
-					}, this.speed, 0);
+					animationManager.pushAnimation(mesh, [
+						['position', {from: new V3(this.pos.x +vx *.6, 0, this.pos.y +vz *.6), to: mesh.position.clone()}],
+						['scale', {from: new V3(.1,.1,.1), to: new V3(1,1,1)}]
+					], this.speed, 0);
 
 					var camP = renderManager.cam.position.clone();
 
-					animationManager.pushAnimation(renderManager.cam, {
-						'position': {from: camP, to: new V3(this.pos.x, camP.y, this.pos.y+.75)}
-					}, this.speed, 0);
+					animationManager.pushAnimation(renderManager.cam, [
+						['position', {from: camP, to: new V3(this.pos.x, camP.y, this.pos.y+.75)}]
+					], this.speed, 0);
 
 					this.parts.push({x: this.pos.x, y: this.pos.y});
 					map.setPos(this.pos.x, this.pos.y, TYPE.LIST[TYPE.SNAKE]);
@@ -647,15 +646,15 @@
 				this.parts = [map.spawn];
 				this.dir = -1;
 
-				this.setColor(COLOR.GREEN);
+				snake.setColor(COLOR.GREEN);
 				this.pos.x = map.spawn.x;
 				this.pos.y = map.spawn.y;
 
 				var mesh = renderManager.craftMesh(TYPE.LIST[TYPE.SNAKE], map.spawn.x, map.spawn.y);
 
-				animationManager.pushAnimation(mesh, {
-					'scale': {from: new V3(.05,.05,.05), to: new V3(1,1,1)}
-				},400, 0);
+				animationManager.pushAnimation(mesh, [
+					['scale', {from: new V3(.05,.05,.05), to: new V3(1,1,1)}]
+				],400, 0);
 
 				map.grid[map.spawn.x][map.spawn.y] = TYPE.LIST[TYPE.SNAKE];
 				snake.paused = false;
@@ -753,16 +752,16 @@
 				for(var i= (snake.parts.length>25 ? snake.parts.length-25 : 0); i<snake.parts.length; i++){
 					var mesh = renderManager.grid[snake.parts[i].x][snake.parts[i].y];
 
-					animationManager.pushAnimation(mesh, {
-						'rotation' : {from: new V3(0,0,0), to: new V3(0, Math.PI*1.5, 0)},
-						'scale' : {from: new V3(1,1,1), to: new V3(0.05, 0.05, 0.05)}
-					}, 400, i*50,
+					animationManager.pushAnimation(mesh, [
+						['rotation', {from: new V3(0,0,0), to: new V3(0, Math.PI*1.5, 0)}],
+						['scale', {from: new V3(1,1,1), to: new V3(0.05, 0.05, 0.05)}]
+					], 400, i*50,
 					function(mesh){renderManager.clearMesh(mesh);});
 				}
 
-				animationManager.pushAnimation(renderManager.cam, {
-						'position': {from: renderManager.cam.position.clone(), to: new V3(map.spawn.x, renderManager.cam.position.y, map.spawn.y+.5)}
-					}, 250, Math.min(25, snake.parts.length) *50+200,
+				animationManager.pushAnimation(renderManager.cam, [
+						['position', {from: renderManager.cam.position.clone(), to: new V3(map.spawn.x, renderManager.cam.position.y, map.spawn.y+.5)}]
+					], 250, Math.min(25, snake.parts.length) *50+200,
 					function(){
 						renderManager.clearGrid();
 
@@ -815,11 +814,11 @@
 			this.callback = callback;
 
 			if(this.delay === 0)
-				for(key in this.param)
-					this.mesh[key].set(
-						this.param[key].from.x,
-						this.param[key].from.y,
-						this.param[key].from.z
+				for(var i=0; i<this.param.length; i++)
+					this.mesh[this.param[i][0]].set(
+						this.param[i][1].from.x,
+						this.param[i][1].from.y,
+						this.param[i][1].from.z
 					);
 		}
 
@@ -837,11 +836,11 @@
 
 				var offN = 1-off;
 
-				for(key in this.param)
-					this.mesh[key].set(
-						this.param[key].from.x *offN + this.param[key].to.x *off,
-						this.param[key].from.y *offN + this.param[key].to.y *off,
-						this.param[key].from.z *offN + this.param[key].to.z *off
+				for(var i=0; i<this.param.length; i++)
+					this.mesh[this.param[i][0]].set(
+						this.param[i][1].from.x *offN + this.param[i][1].to.x *off,
+						this.param[i][1].from.y *offN + this.param[i][1].to.y *off,
+						this.param[i][1].from.z *offN + this.param[i][1].to.z *off
 					);
 
 				if(off === 1){
@@ -884,10 +883,9 @@
 			moveIn : function(snake, mesh){
 				snake.setColor(this.color);
 
-				animationManager.pushAnimation(
-					mesh,{
-						'scale' : {from: new V3(1,1,1), to: new V3(.05,.05,.05)}
-					}, 500, 0, function(mesh){
+				animationManager.pushAnimation(mesh, [
+						['scale', {from: new V3(1,1,1), to: new V3(.05,.05,.05)}]
+					], 500, 0, function(mesh){
 						renderManager.clearMesh(mesh);
 					});
 
@@ -967,10 +965,9 @@
 				if(snake.color === this.color){
 					snake.maxLength++;
 
-					animationManager.pushAnimation(
-					mesh,{
-						'rotation' : {from: new V3(0,0,0), to: new V3(0,Math.PI,0)}
-					}, 500, 0, function(mesh){
+					animationManager.pushAnimation(mesh, [
+						['rotation', {from: new V3(0,0,0), to: new V3(0,Math.PI,0)}]
+					], 500, 0, function(mesh){
 						renderManager.clearMesh(mesh);
 					});
 
@@ -1202,7 +1199,7 @@
 			this.ruleGeo = rules[0].style;
 			this.ruleFrame = rules[1].style;
 
-			this.craftDefault();
+			this.load();
 
 			var self = this;
 			this.mouseMove = function(e){
@@ -1348,42 +1345,74 @@
 					for(j=0; j<this.buildArea[i].length; j++)
 						list.push(this.buildArea[i][j].data);
 
-				list[this.spawn.x +this.spawn.y *this.width] = 0;
+				list[this.spawn.x +this.spawn.y *this.width+6] = 0;
 				return arrayToString(list);
 			},
 
-			updateSelectedId : function(){
-				if(this.selectedType<2)
-					this.selectedId = this.selectedType;
+			load : function(data){
+				if(data !== undefined){
+					data = stringToArray(data);
 
-				else
-					this.selectedId = this.selectedType + this.selectedColor;
-			},
+					this.height = data[0];
+					this.width = data[1];
+					this.spawn.x = data[2];
+					this.spawn.y = data[3];
 
-			craftDefault : function(){
-				this.spawn.y = this.spawn.x = 0;
-				this.dotCount = 0;
+					this.dotCount = data[4]+ (data[5]<<5);
+
+				}else{
+					data = [];
+
+					this.height = 10;
+					this.width = 10;
+					this.spawn.x = 0;
+					this.spawn.y = 0;
+
+					this.dotCount = 0;
+				}
+
+				for(var i=0, j; i<this.buildArea.length; i++)
+					for(j=0; j<this.buildArea[i].length; j++)
+						this.clearPos(this.buildArea[i][j]);
+
 				this.buildArea = [];
 
-				var mesh;
-				for(var i=0, j, mesh; i<this.width; i++){
+				var mesh, type;
+				for(var i=0, j; i<this.width; i++){
 					this.buildArea.push([]);
 
 					for(j=0; j<this.height; j++){
-						mesh = TYPE.LIST[TYPE.GROUND].mesh.clone();
+						type = data[i*this.height +j +6] || TYPE.GROUND;
+
+						mesh = TYPE.LIST[ type ].mesh.clone();
 						mesh.position.x = i;
 						mesh.position.z = j;
 
-						this.buildArea[i].push({data: 0, meshes:[ mesh ]});
+						this.buildArea[i].push({data: type, meshes:[ mesh ]});
+
+						if(type.ground !== true){
+							mesh = TYPE.LIST[ TYPE.GROUND ].mesh.clone();
+							mesh.position.x = i;
+							mesh.position.z = j;
+							this.buildArea[i][j].meshes.push(mesh);
+						}
 					}
 				}
 
-				this.buildArea[0][0].data = TYPE.SNAKE;
+				this.buildArea[this.spawn.x][this.spawn.y].data = TYPE.SNAKE;
 
 				mesh = TYPE.LIST[TYPE.SNAKE].mesh.clone();
 				mesh.position.x = this.spawn.x;
 				mesh.position.z = this.spawn.y;
-				this.buildArea[0][0].meshes.push(mesh);
+				this.buildArea[this.spawn.x][this.spawn.y].meshes.push(mesh);
+			},
+
+			updateSelectedId : function(){
+				if(this.selectedType<3)
+					this.selectedId = this.selectedType;
+
+				else
+					this.selectedId = this.selectedType + this.selectedColor;
 			},
 
 			addMesh : function(id, x, y){
@@ -1478,9 +1507,10 @@
 			},
 
 			clearArea : function(){
-				for(var i=0, j; i<this.buildArea.length; i++)
+				for(var i=0, j, k, pos; i<this.buildArea.length; i++)
 					for(j=0; j<this.buildArea[i].length; j++)
-						this.clearPos( this.buildArea[i][j] );
+						for(k=0; k<this.buildArea[i][j].meshes.length; k++)
+							renderManager.clearMesh( this.buildArea[i][j].meshes[k] );
 			},
 
 			renderArea : function(){
@@ -1566,7 +1596,15 @@
 			};
 			document.getElementsByClassName('clear')[0].onclick = function(){
 				builder.clearArea();
-				builder.craftDefault();
+				builder.load();
+				builder.renderArea();
+				renderManager.renderFrame();
+				self.setActive(GUI.CRAFTBOX);
+			};
+
+			document.getElementsByClassName('load')[0].onclick = function(){
+				builder.clearArea();
+				builder.load( document.getElementById('levelData').value );
 				builder.renderArea();
 				renderManager.renderFrame();
 				self.setActive(GUI.CRAFTBOX);
@@ -1759,6 +1797,7 @@
 	<div id='craftMenu' style='display:none;'>
 		<button class='quit'>quitter</button>
 		<button class='clear'>clear</button>
+		<button class='load'>load</button>
 		<input id='levelData' type='text'><br/>
 		hauteur: <input id='levelHeight' type='number' value='10' MIN=5 MAX=30>
 		largeur: <input id='levelWidth' type='number' value='10' MIN=5 MAX=30><br/>
