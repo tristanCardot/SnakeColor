@@ -124,14 +124,9 @@
 			LEVELS = [
 				"FFAAGAAAMAMAABAAMBBBMAABAAMAMAA",
 				"FFCCDANAAAMAFAEAAAAABAGAAAOABAB",
-				"LLAETAAAABCANAAAAAPABAAAOAAAAAAOAAPAANAMAMAAABAABBAAABAEANAAAANAAGAFAAPAAAAAAHABAAABBOABAPAOAAAAAAAAAAAANAOAAMAABMAAAAAPAAABAAA",
-				"KKAAAAAAAAAAAAAAAAAAAAAAAAAIDFAAAAAAGFBGIAAAAADBBBDBBBBAIGBFGAAAAAAFDIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-				"KKAAAAAAAAAAAAAAAAAAAAAAAAAIDFAAAAAAGFBGIAAAAADBBBDBBBBAIGBFGAAAAAAFDIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-				"KKAAAAAAAAAAAAAAAAAAAAAAAAAIDFAAAAAAGFBGIAAAAADBBBDBBBBAIGBFGAAAAAAFDIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-				"KKAAAAAAAAAAAAAAAAAAAAAAAAAIDFAAAAAAGFBGIAAAAADBBBDBBBBAIGBFGAAAAAAFDIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-				"KKAAAAAAAAAAAAAAAAAAAAAAAAAIDFAAAAAAGFBGIAAAAADBBBDBBBBAIGBFGAAAAAAFDIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-				"KKAAAAAAAAAAAAAAAAAAAAAAAAAIDFAAAAAAGFBGIAAAAADBBBDBBBBAIGBFGAAAAAAFDIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-				"KKAAAAAAAAAAAAAAAAAAAAAAAAAIDFAAAAAAGFBGIAAAAADBBBDBBBBAIGBFGAAAAAAFDIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+				"HLBDFABAAAAABBBAAABBABAAABAABADABABADMDAABAADAABABAAABAABAAABABAALAABBALELABBBALABB",
+				"LLAETAAAABAANAAAAAPABAAAOAAAAAAOAAPAANAMAMAAABAABBAAABAEANAAAANAAGAFAAPAAAAAAHABAAABBOABAPAOAAAAAAAAAAAANAOAAMAABMAAAAAPAAABAAA",
+				"FPHEKAAAAAAAAAAAAABNNABAMHABAAAAODMAABAAAGBEBAABAAAAODMAABAAAABAMFAABPPAAAAAAAAAA"
 			],
 
 			GUI = {
@@ -696,7 +691,7 @@
 						if(i<0 || j<0 || i>=this.width || j>=this.height)
 							select = TYPE.LIST[ TYPE.WALL ];
 						else
-							select = TYPE.LIST[ result[i*this.width +j +6] ];
+							select = TYPE.LIST[ result[i *map.height +j +6] ];
 
 
 						if(select !== undefined){
@@ -767,7 +762,7 @@
 
 						for(var i=0, j; i<map.width; i++)
 							for(var j=0; j<map.height; j++){
-								select = TYPE.LIST[ map.ld[i*map.width +j +6] ];
+								select = TYPE.LIST[ map.ld[i *map.height +j +6] ];
 
 								if(select !== undefined)
 									if(select.ground !== true){
@@ -1168,6 +1163,36 @@
 
 			renderFrame : function(){
 				this.renderer.render(this.scene, this.cam);
+			},
+
+			setCamMode : function(id){
+				switch(id){
+					case 0:
+						renderManager.cam.position.y = 4;
+						renderManager.cam.position.x = 1;
+						renderManager.cam.position.z = 1;
+						renderManager.cam.rotation.x = -Math.PI/32*14;
+						renderManager.cam.rotation.y = -Math.PI/32;
+						break;
+					case 1:
+						renderManager.cam.position.y = 8;
+						renderManager.cam.position.x = 1;
+						renderManager.cam.position.z = 1;
+						renderManager.cam.rotation.x = -Math.PI/2;
+						renderManager.cam.rotation.y = 0;
+						break;
+				}
+
+
+
+			/*
+			renderManager.cam.position.y = 5;
+			renderManager.cam.position.x = 1;
+			renderManager.cam.position.z = 1;
+			renderManager.cam.rotation.x = -Math.PI/2;//-Math.PI/32*14;
+			renderManager.cam.rotation.y = -Math.PI/32;*/
+
+
 			}
 		};
 
@@ -1345,12 +1370,12 @@
 					for(j=0; j<this.buildArea[i].length; j++)
 						list.push(this.buildArea[i][j].data);
 
-				list[this.spawn.x +this.spawn.y *this.width+6] = 0;
+				list[this.spawn.x *this.height +this.spawn.y  +6] = 0;
 				return arrayToString(list);
 			},
 
 			load : function(data){
-				if(data !== undefined){
+				if(data != null && data.indexOf(' ') === -1){
 					data = stringToArray(data);
 
 					this.height = data[0];
@@ -1585,10 +1610,12 @@
 
 			document.getElementsByClassName('play')[0].onclick = function(){
 				renderManager.startUpdate();
+				renderManager.setCamMode(0);
 				self.setActive(GUI.LEVELSELECT);
 			};
 			document.getElementsByClassName('build')[0].onclick = function(){
 				snake.setColor(COLOR.GREEN);
+				renderManager.setCamMode(1);
 				builder.renderArea();
 				builder.bindEvent();
 				renderManager.renderFrame();
@@ -1638,6 +1665,8 @@
 			var index = e.target.firstChild.data;
 			this.currentLevel = index;
 			map.updateData(LEVELS[index]);
+			//TODO ANIMATION
+
 
 			this.setActive(GUI.GUIPLAYER);
 		},
@@ -1724,13 +1753,7 @@
 
 		window.addEventListener('load', function(){
 			document.body.insertBefore(CANVAS, document.body.firstChild);
-
-			renderManager.cam.position.y = 5;
-			renderManager.cam.position.x = 1;
-			renderManager.cam.position.z = 1;
 			renderManager.cam.rotation.order = 'YXZ';
-			renderManager.cam.rotation.x = -Math.PI/2;/*-Math.PI/32*14;
-			renderManager.cam.rotation.y = -Math.PI/32;*/
 			//renderManager.renderFrame();
 		}, false);
 
