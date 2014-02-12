@@ -1313,7 +1313,7 @@
 			this.ruleGeo = rules[0].style;
 			this.ruleFrame = rules[1].style;
 
-			this.load();
+			this.load("");
 
 			var self = this;
 			this.mouseMove = function(e){
@@ -1464,7 +1464,7 @@
 			},
 
 			load : function(data){
-				if(data != null && data.indexOf('-') === -1){
+				if(data !== "" && data.indexOf('-') === -1){
 					data = stringToArray(data);
 
 					this.height = data[0];
@@ -1484,6 +1484,8 @@
 
 					this.dotCount = 0;
 				}
+
+				this.setSize(this.height, this.width);
 
 				for(var i=0, j; i<this.buildArea.length; i++)
 					for(j=0; j<this.buildArea[i].length; j++)
@@ -1566,12 +1568,16 @@
 						this.addMesh(typeId, x, y)
 					);
 				}
+
+				this.updateDotCount(typeId, x, y);
+				this.buildArea[x][y].data = typeId;
+			},
+
+			updateDotCount : function(typeId, x, y){
 				if(this.buildArea[x][y].data > 10 && this.buildArea[x][y].data < 19)
 					this.dotCount--;
 				if(typeId > 10 && typeId < 19)
 					this.dotCount++;
-
-				this.buildArea[x][y].data = typeId;
 			},
 
 			setSize : function(height, width){
@@ -1584,8 +1590,10 @@
 
 				else if(this.height > height)
 					for(var i=0, j; i<this.width; i++){
-						for(j=height; j<this.height; j++)
+						for(j=height; j<this.height; j++){
+							this.updateDotCount(TYPE.GROUND, i, j);
 							this.clearPos(this.buildArea[i][j]);
+						}
 
 						this.buildArea[i].splice(height);
 					}
@@ -1604,8 +1612,10 @@
 
 				else if(this.width > width){
 					for(var i=width, j; i<this.width; i++)
-						for(j=0; j<this.buildArea[i].length; j++)
+						for(j=0; j<this.buildArea[i].length; j++){
+							this.updateDotCount(TYPE.GROUND, i, j);
 							this.clearPos(this.buildArea[i][j]);
+						}
 
 					this.buildArea.splice(width);
 				}
@@ -1684,9 +1694,6 @@
 			levelList.addEventListener('click', function(e){self.selectLevel(e);}, false);
 			levelList.firstChild.className='active';
 
-			var list = document.getElementsByClassName('quit');
-			for(var i=0; i<list.length; i++)
-				list[i].onclick = function(){self.quit();};
 
 			this.list = [
 				document.getElementById('mainMenu'),
@@ -1696,39 +1703,32 @@
 				document.getElementById('craftBox'),
 				document.getElementById('craftMenu')
 			];
-			//TODO facto function => switch case
+
+			document.getElementsByClassName('quit')[0].onclick = function(){
+				self.setActive(GUI.MAIN, 0);
+			};
+			document.getElementsByClassName('quit')[1].onclick = function(){
+				self.setActive(GUI.MAIN, 1);
+			};
+			document.getElementsByClassName('quit')[2].onclick = function(){
+				self.setActive(GUI.MAIN, 2);
+			};
 
 			document.getElementsByClassName('play')[0].onclick = function(){
-				renderManager.startUpdate();
-				renderManager.setCamMode(0);
 				self.setActive(GUI.LEVELSELECT);
 			};
+
 			document.getElementsByClassName('build')[0].onclick = function(){
-				snake.setColor(COLOR.GREEN);
-				renderManager.setCamMode(1);
-				builder.renderArea();
-				builder.bindEvent();
-				renderManager.renderFrame();
-				self.setActive(GUI.CRAFTBOX);
+				self.setActive(GUI.CRAFTBOX, 0);
 			};
 			document.getElementsByClassName('clear')[0].onclick = function(){
-				builder.clearArea();
-				builder.load();
-				builder.renderArea();
-				renderManager.renderFrame();
-				self.setActive(GUI.CRAFTBOX);
+				self.setActive(GUI.CRAFTBOX, 1);
 			};
-
 			document.getElementsByClassName('load')[0].onclick = function(){
-				builder.clearArea();
-				builder.load( document.getElementById('levelData').value );
-				builder.renderArea();
-				renderManager.renderFrame();
-				self.setActive(GUI.CRAFTBOX);
+				self.setActive(GUI.CRAFTBOX, 2);
 			};
 
 			document.getElementsByClassName('resume')[0].onclick = function(){
-				snake.paused = false;
 				self.setActive(GUI.GUIPLAYER);
 			}
 
@@ -1747,7 +1747,60 @@
 			this.activeNode = document.getElementById('mainMenu');
 		},
 
-		setActive : function(guiId){
+		setActive : function(guiId, id){
+			switch(guiId){
+				case GUI.LEVELSELECT:
+					renderManager.startUpdate();
+					renderManager.setCamMode(0);
+
+
+				break;
+				case GUI.CRAFTBOX:
+					if(id === 0){
+							snake.setColor(COLOR.GREEN);
+							renderManager.setCamMode(1);
+							builder.bindEvent();
+
+					}else{
+						builder.clearArea();
+					}
+
+					if(id !== 4)
+						builder.load( (id === 2 ? document.getElementById('levelData').value : "") );
+
+					builder.renderArea();
+					renderManager.renderFrame();
+
+
+				break;
+				case GUI.MAIN :
+					if(id === 2){
+						builder.clearArea();
+						builder.clearEvent();
+						renderManager.renderFrame();
+
+					}else{
+						renderManager.stopUpdate();
+						renderManager.clearGrid();
+						renderManager.clearGround();
+					}
+
+
+				break;
+				case GUI.GUIPLAYER:
+					snake.paused = false;
+				break;
+				case GUI.INGAME:
+					snake.paused = true;
+				break;
+				case GUI.CRAFTMENU: console.log('tick');
+					document.getElementById('levelData').value = builder.export();
+				break;
+			}
+
+
+
+
 			this.activeNode.style.display = 'none';
 			this.list[guiId].style.display = '';
 			this.active = guiId;
@@ -1770,7 +1823,8 @@
 		startNextLevel : function(){
 			var node = document.getElementById('levelList').childNodes[this.currentLevel]
 			node.className +=' finished';
-			node.title = sneak.dotCount; 
+			node.title = snake.moveCount; 
+			console.log(node);
 
 			this.currentLevel++;
 			if(LEVELS.length > this.currentLevel){
@@ -1782,20 +1836,6 @@
 		},
 
 		quit : function(){
-			switch(this.active){
-				case GUI.CRAFTMENU:
-						builder.clearArea();
-						builder.clearEvent();
-						renderManager.renderFrame();
-					break;
-				case GUI.INGAME:
-						renderManager.stopUpdate();
-						renderManager.clearGrid();
-						renderManager.clearGround();
-					break;
-			}
-
-			this.setActive(GUI.MAIN);
 		},
 
 		keyDown : function(e){
@@ -1823,19 +1863,16 @@
 				case 80: case 27:
 						switch(this.active){
 							case GUI.GUIPLAYER:
-									snake.paused = true;
 									this.setActive(GUI.INGAME);
 								break;
 							case GUI.CRAFTBOX:
-									document.getElementById('levelData').value = builder.export();
 									this.setActive(GUI.CRAFTMENU);
 								break;
 							case GUI.INGAME:
-									snake.paused = false;
 									this.setActive(GUI.GUIPLAYER);
 								break;
 							case GUI.CRAFTMENU:
-									this.setActive(GUI.CRAFTBOX);
+									this.setActive(GUI.CRAFTBOX,4);
 						}
 					break;
 			}
