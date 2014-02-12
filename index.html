@@ -64,7 +64,7 @@
 
 
 		div#craftGeo:hover{
-			width:300px;
+			width:420px;
 			background-position:0px 0px;
 		}	
 
@@ -207,14 +207,8 @@
 				"FFAAGAAAMAMAABAAMBBBMAABAAMAMAA",
 				"FFCCDANAAAMAFAEAAAAABAGAAAOABAB",
 				"HLBDFABAAAAABBBAAABBABAAABAABADABABADMDAABAADAABABAAABAABAAABABAALAABBALELABBBALABB",
-				"LLAETAAAABAANAAAAAPABAAAOAAAAAAOAAPAANAMAMAAABAABBAAABAEANAAAANAAGAFAAPAAAAAAHABAAABBOABAPAOAAAAAAAAAAAANAOAAMAABMAAAAAPAAABAAA",
-				"FNGENAAAAAAAAAAAAABNNABAMHAODAAABAMAGBEBAABAMAAODAAABAMFAABPPAAAAAAAAAA",
-				"FNGEPAAAAAAAAAAAAABNNABAMHAODMAABAMAGBEBAABAMAAODMAABAMFAABPPAAAAAAAAAA",
-				"FFAAGAAAMAMAABAAMBBBMAABAAMAMAA",
-				"FFCCDANAAAMAFAEAAAAABAGAAAOABAB",
-				"HLBDFABAAAAABBBAAABBABAAABAABADABABADMDAABAADAABABAAABAABAAABABAALAABBALELABBBALABB",
-				"LLAETAAAABAANAAAAAPABAAAOAAAAAAOAAPAANAMAMAAABAABBAAABAEANAAAANAAGAFAAPAAAAAAHABAAABBOABAPAOAAAAAAAAAAAANAOAAMAABMAAAAAPAAABAAA",
-				"FNGENAAAAAAAAAAAAABNNABAMHAODAAABAMAGBEBAABAMAAODAAABAMFAABPPAAAAAAAAAA"
+				"LLAEUAAAABAANAAAAAPABAAAOAMAAAAOAAPAANAMAMAAABAABBAAABAEANAAAANAAGAFAAPAAAAAAHABAAABBOABAPAOAAAAAAAAAAAANAOAAMAABMAAAAAPAAABAAA",
+				"FNGEJAAAAAAAAAAAAABNNABAMHAODAAABAMAGBEBAABAMAAODAAABAMFAABPPAAAAAAAAAA",
 			],
 
 			GUI = {
@@ -253,16 +247,16 @@
 				var geo = new THREE.Geometry();
 				geo.vertices = convertArray([
 					-.4, .4, -.4,
-					-.4, .4,  .4, 
+					-.4, .4,  .4,
 					 .4, .4,  .4,
 					 .4, .4, -.4,
 
 					-.4, .4, -.4,
 					-.4, .0, -.4,
 					-.4, .0,  .4,
-					-.4, .4,  .4, 
+					-.4, .4,  .4,
 
-					-.4, .4,  .4, 
+					-.4, .4,  .4,
 					-.4, .0,  .4,
 					 .4, .0,  .4,
 					 .4, .4,  .4,
@@ -393,8 +387,6 @@
 				return geo;
 			})(),
 
-			
-
 			wall: (function(){
 				var geo = new THREE.Geometry();
 				geo.vertices = convertArray([
@@ -449,6 +441,104 @@
 					64,65,66, 67,68,69,
 					70,71,72, 73,74,75
 
+				], THREE.Face3);
+
+				return geo;
+			})(),
+
+			camRotatorPOS: (function(){
+				var geo = new THREE.Geometry();
+				geo.vertices = convertArray([
+					-.4,  0, -.4,
+					-.4,  0,  .4,
+					 .4,  0,  .4,
+					 .4,  0, -.4,
+
+					-.4,   0, -.4,
+					-.5, -.1, -.5,
+					-.5, -.1,  .5,
+					-.4,   0,  .4,
+
+					-.4,   0,  .4,
+					-.5, -.1,  .5,
+					 .5, -.1,  .5,
+					 .4,   0,  .4,
+
+					 .4,   0,  .4,
+					 .5, -.1,  .5,
+					 .5, -.1, -.5,
+					 .4,   0, -.4,
+
+					 .4,   0, -.4,
+					 .5, -.1, -.5,
+					-.5, -.1, -.5,
+					-.4,   0, -.4,
+
+					.05, .01,-.35,
+				   -.15, .01,-.15,
+				    .05, .01, .05, 
+
+				   -.05, .01, .35,
+				    .15, .01, .15,
+				   -.05, .01,-.05
+				], THREE.Vector3);
+
+				geo.faces = convertArray([
+					0,1,2,    0,2,3,
+					4,5,6,    4,6,7,
+					8,9,10,   8,10,11,
+					12,13,14, 12,14,15,
+					16,17,18, 16,18,19,
+					20,21,22, 23,24,25
+				], THREE.Face3);
+
+				return geo;
+			})(),
+
+			camRotatorNEG: (function(){
+				var geo = new THREE.Geometry();
+				geo.vertices = convertArray([
+					-.4,  0, -.4,
+					-.4,  0,  .4,
+					 .4,  0,  .4,
+					 .4,  0, -.4,
+
+					-.4,   0, -.4,
+					-.5, -.1, -.5,
+					-.5, -.1,  .5,
+					-.4,   0,  .4,
+
+					-.4,   0,  .4,
+					-.5, -.1,  .5,
+					 .5, -.1,  .5,
+					 .4,   0,  .4,
+
+					 .4,   0,  .4,
+					 .5, -.1,  .5,
+					 .5, -.1, -.5,
+					 .4,   0, -.4,
+
+					 .4,   0, -.4,
+					 .5, -.1, -.5,
+					-.5, -.1, -.5,
+					-.4,   0, -.4,
+
+				   -.05, .01,-.35,
+				    .15, .01,-.15,
+				   -.05, .01, .05, 
+
+				    .05, .01, .35,
+				   -.15, .01, .15,
+				    .05, .01,-.05
+				], THREE.Vector3);
+
+				geo.faces = convertArray([
+					0,1,2,    0,2,3,
+					4,5,6,    4,6,7,
+					8,9,10,   8,10,11,
+					12,13,14, 12,14,15,
+					16,17,18, 16,18,19,
+					20,22,21, 23,25,24
 				], THREE.Face3);
 
 				return geo;
@@ -616,11 +706,13 @@
 //- SNAKE
 		function Snake(){
 			this.pos = {x: 0, y: 0};
+			this.off = {x: 0, y: 0};
 			this.maxLength = 5;
 			this.speed = 400;
 			this.nextMove = 0;
 			this.moveCount = 0;
 			this.paused = true;
+			this.camRotation = 0;
 
 			this.dir = -1;
 			this.parts = [];
@@ -710,12 +802,12 @@
 					animationManager.pushAnimation(mesh, [
 						['position', {from: new V3(this.pos.x +vx *.6, 0, this.pos.y +vz *.6), to: mesh.position.clone()}],
 						['scale', {from: new V3(.1,.1,.1), to: new V3(1,1,1)}]
-					], this.speed, 0);
+					], this.speed-50, 0);
 
 					var camP = renderManager.cam.position.clone();
 
 					animationManager.pushAnimation(renderManager.cam, [
-						['position', {from: camP, to: new V3(this.pos.x, camP.y, this.pos.y+.75)}]
+						['position', {from: camP, to: new V3(this.pos.x+this.off.x, camP.y, this.pos.y+this.off.y)}]
 					], this.speed, 0);
 
 					this.parts.push({x: this.pos.x, y: this.pos.y});
@@ -729,15 +821,60 @@
 					snake.mat.uniforms.color.value = COLOR.RGB[ color];
 			},
 
+			setCamRotation : function(id){
+				var newR, newP;
+
+				switch(id){
+					case 0:
+							this.camRotation = 0;
+							renderManager.cam.rotation.y %= Math.PI*2;
+							newR = new V3(-Math.PI/32*12, -Math.PI/16, 0);
+						break;
+					case 1:
+							newR = new V3(-Math.PI/32*12, renderManager.cam.rotation.y +Math.PI/2, 0);
+						break;
+					case -1:
+							newR = new V3(-Math.PI/32*12, renderManager.cam.rotation.y -Math.PI/2, 0);
+						break;
+					default: return;
+				}
+
+				this.camRotation += id;
+				if(this.camRotation < 0)
+					this.camRotation+=4;
+				this.camRotation %= 4;
+
+				switch(this.camRotation){
+					case 0: newP = new V3(this.pos.x-.5, 4, this.pos.y+2);
+						break;
+					case 1: newP = new V3(this.pos.x+2, 4,  this.pos.y+.5);
+						break;
+					case 2: newP = new V3(this.pos.x+.5, 4, this.pos.y-2);
+						break;
+					case 3: newP = new V3(this.pos.x-2, 4,  this.pos.y-.5);
+						break;
+				}
+
+				this.off.x = newP.x -this.pos.x;
+				this.off.y = newP.z -this.pos.y;
+
+				animationManager.pushAnimation(renderManager.cam, [
+						['position', {from: renderManager.cam.position.clone(), to: newP}],
+						['rotation', {from: renderManager.cam.rotation.clone(), to: newR}]
+					], 500, 0);
+			},
+
 			reset : function(){
 				this.moveCount = 0;
 				this.maxLength = 5;
 				this.parts = [map.spawn];
 				this.dir = -1;
 
-				snake.setColor(COLOR.GREEN);
 				this.pos.x = map.spawn.x;
 				this.pos.y = map.spawn.y;
+
+				this.setColor(COLOR.GREEN);
+				this.setCamRotation(0);
 
 				var mesh = renderManager.craftMesh(TYPE.LIST[TYPE.SNAKE], map.spawn.x, map.spawn.y);
 
@@ -764,7 +901,7 @@
 		}
 
 		Map.prototype = {
-			updateData : function(ld){//ld=> LevelData TODO basic
+			updateData : function(ld){
 				var result = stringToArray(ld);
 				this.ld = result;
 
@@ -772,7 +909,7 @@
 				this.width = result[1];
 				this.spawn = {x: result[2]+1, y: result[3]+1};
 				this.dotCount = result[4]+ (result[5]<<5);
-				//TODO clearAll RM
+
 				renderManager.initGrid(this.height+2, this.width+2);
 
 				this.grid = [];
@@ -848,10 +985,7 @@
 					function(mesh){renderManager.clearMesh(mesh);});
 				}
 
-				animationManager.pushAnimation(renderManager.cam, [
-						['position', {from: renderManager.cam.position.clone(), to: new V3(map.spawn.x, renderManager.cam.position.y, map.spawn.y+.5)}]
-					], 250, Math.min(25, snake.parts.length) *50+200,
-					function(){
+				setTimeout( function(){
 						renderManager.clearGrid();
 
 						for(var i=0, j; i<map.width; i++)
@@ -870,7 +1004,7 @@
 							}
 
 						snake.reset();
-					});
+					}, Math.min(25, snake.parts.length) *50+200);
 			}
 		};
 
@@ -989,26 +1123,29 @@
 			}
 		};
 
-		function Block(height){
-			this.height = height;
+		function Block(type){
+			this.type = type;
 			this.mesh = this.craftMesh();
 			this.ground = true;
 		}
 
 		Block.prototype = {
 			moveIn : function(snake){
-				return this.height === 0;
+				if(this.type !== 0)
+					snake.setCamRotation(this.type);
+
+				return this.type !== 2;
 			},
 
 			craftMesh : function(){
 				var mat = MAT.grayGradient.clone(),
 					geo;
 
-				if(this.height === 0){
+				if(this.type === 0){
 					geo = GEO.ground;
 					mat.attributes = {grad: {type:'f', value:[.35,.35,.35,.35, .45,.45,.45,.45, .40,.40,.40,.40, .3,.3,.3,.3, .25,.25,.25,.25]}};
 
-				}else{
+				}else if (this.type === 2){
 					geo = GEO.wall;
 					mat.attributes = {grad: {type:'f', value:[
 						.25,.25,.25,.25,
@@ -1037,6 +1174,13 @@
 						.35,.35,.35,
 						.35,.35,.35,
 						.35,.35,.35
+					]}};
+				}else{
+					geo = (this.type === 1 ? GEO.camRotatorPOS : GEO.camRotatorNEG);
+					mat.attributes = {grad: {type:'f', value:[
+						.35,.35,.35,.35, .45,.45,.45,.45, .40,.40,.40,.40, .3,.3,.3,.3, .25,.25,.25,.25,
+						.1,.1,.1,
+						.1,.1,.1
 					]}};
 				}
 
@@ -1077,16 +1221,35 @@
 		var TYPE = {
 			GROUND: 0,
 			WALL: 1,
+			CAMROTATORPOS: 19,
+			CAMROTATORNEG: 20,
+			BLOCK : {0:1, 1:1, 19:1, 20:1},
+
 			SNAKE: 2,
 
 			SWAPERBLACK: 3,
 			SWAPERGREEN: 4,
 			SWAPERRED: 5,
 			SWAPERYELLOW: 6,
+			SWAPERBLUE: 7,
+			SWAPERCYAN: 8,
+			SWAPERVIOLET: 9,
+			SWAPERWHITE: 10,
+			SWAPER: {3:1, 4:1, 5:1, 6:1, 7:1, 8:1, 9:1, 10:1},
+
+			DOTBLACK: 11,
+			DOTGREEN: 12,
+			DOTRED: 13,
+			DOTYELLOW: 14,
+			DOTBLUE: 15,
+			DOTCYAN: 16,
+			DOTVIOLET: 17,
+			DOTWHITE: 18,
+			DOT : {11:1, 12:1, 13:1, 14:1, 15:1, 16:1, 17:1, 18:1},
 
 			LIST: [
 				new Block(0),
-				new Block(1),
+				new Block(2),
 				new SnakePart(),
 
 				new ColorSwaper( COLOR.BLACK),
@@ -1105,7 +1268,10 @@
 				new Dot( COLOR.BLUE),
 				new Dot( COLOR.CYAN),
 				new Dot( COLOR.VIOLET),
-				new Dot( COLOR.WHITE)
+				new Dot( COLOR.WHITE),
+
+				new Block(1),
+				new Block(-1)
 			]
 		};
 		TYPE.LIST['undefined'] = TYPE.LIST[0];
@@ -1262,26 +1428,13 @@
 			setCamMode : function(id){
 				switch(id){
 					case 0:
-						renderManager.cam.position.y = 4;
-						renderManager.cam.position.x = 1;
-						renderManager.cam.position.z = 1;
-						renderManager.cam.rotation.x = -Math.PI/32*14;
-						renderManager.cam.rotation.y = -Math.PI/32;
+							snake.setCamRotation(0);
 						break;
 					case 1:
-						renderManager.cam.position.y = 8;
-						renderManager.cam.position.x = 1;
-						renderManager.cam.position.z = 1;
-						renderManager.cam.rotation.x = -Math.PI/2;
-						renderManager.cam.rotation.y = 0;
+							renderManager.cam.position.set(1, 8, 1);
+							renderManager.cam.rotation.set(-Math.PI/2, 0, 0);
 						break;
 				}
-			/*
-			renderManager.cam.position.y = 5;
-			renderManager.cam.position.x = 1;
-			renderManager.cam.position.z = 1;
-			renderManager.cam.rotation.x = -Math.PI/2;//-Math.PI/32*14;
-			renderManager.cam.rotation.y = -Math.PI/32;*/
 			}
 		};
 
@@ -1397,6 +1550,8 @@
 							break;
 						case 4: self.selectedType = 2;
 							break;
+						case 5: case 6: self.selectedType = off +14;
+							break;
 					}
 					 
 					self.updateSelectedId();
@@ -1408,9 +1563,9 @@
 			getBGGeo : function(){
 				var canvas = document.createElement('canvas');
 				canvas.height = 60;
-				canvas.width = 300;
+				canvas.width = 420;
 				var ctx = canvas.getContext('2d');
-				ctx.fillRect(0,0,300,60);
+				ctx.fillRect(0,0,420,60);
 
 				var list = [
 					['#aaa',5,40, 27,50, 54,40, 32,30],
@@ -1431,6 +1586,12 @@
 					['#aaa',264,27, 272,27, 281,18, 273,18],
 					['#888',272,27, 264,27, 264,35, 272,35],
 					['#555',281,18, 272,27, 272,35, 281,26],
+
+					['#aaa',332,4, 318,18, 332,32, 328,18],
+					['#888',327,27, 331,41, 327,55, 341,41],
+
+					['#aaa',388,4, 402,18, 388,32, 392,18],
+					['#888',393,27, 389,41, 393,55, 379,41]
 				];
 
 				for(var i=0, s; i<list.length; i++){
@@ -1547,7 +1708,7 @@
 
 				this.clearPos(this.buildArea[x][y]);
 
-				if(typeId === TYPE.WALL || typeId === TYPE.GROUND)
+				if(TYPE.BLOCK[typeId])
 					this.buildArea[x][y].meshes.push( this.addMesh(typeId, x, y) );
 
 				else{
@@ -1574,9 +1735,9 @@
 			},
 
 			updateDotCount : function(typeId, x, y){
-				if(this.buildArea[x][y].data > 10 && this.buildArea[x][y].data < 19)
+				if(TYPE.DOT[this.buildArea[x][y].data])
 					this.dotCount--;
-				if(typeId > 10 && typeId < 19)
+				if(TYPE.DOT[typeId])
 					this.dotCount++;
 			},
 
@@ -1730,8 +1891,7 @@
 
 			document.getElementsByClassName('resume')[0].onclick = function(){
 				self.setActive(GUI.GUIPLAYER);
-			}
-
+			};
 
 			window.addEventListener('keydown', function(e){self.keyDown(e);}, false);
 
@@ -1753,7 +1913,6 @@
 					renderManager.startUpdate();
 					renderManager.setCamMode(0);
 
-
 				break;
 				case GUI.CRAFTBOX:
 					if(id === 0){
@@ -1771,7 +1930,6 @@
 					builder.renderArea();
 					renderManager.renderFrame();
 
-
 				break;
 				case GUI.MAIN :
 					if(id === 2){
@@ -1785,7 +1943,6 @@
 						renderManager.clearGround();
 					}
 
-
 				break;
 				case GUI.GUIPLAYER:
 					snake.paused = false;
@@ -1793,13 +1950,10 @@
 				case GUI.INGAME:
 					snake.paused = true;
 				break;
-				case GUI.CRAFTMENU: console.log('tick');
+				case GUI.CRAFTMENU:
 					document.getElementById('levelData').value = builder.export();
 				break;
 			}
-
-
-
 
 			this.activeNode.style.display = 'none';
 			this.list[guiId].style.display = '';
@@ -1808,7 +1962,7 @@
 		},
 
 		selectLevel : function(e){
-			if(e.target.localName !== 'span' || e.target.className !== 'active')
+			if(e.target.localName !== 'span' || e.target.className.indexOf('active') !== 0)
 				return;
 
 			var index = e.target.firstChild.data;
@@ -1816,15 +1970,13 @@
 			map.updateData(LEVELS[index]);
 			//TODO ANIMATION
 
-
 			this.setActive(GUI.GUIPLAYER);
 		},
 
 		startNextLevel : function(){
 			var node = document.getElementById('levelList').childNodes[this.currentLevel]
 			node.className +=' finished';
-			node.title = snake.moveCount; 
-			console.log(node);
+			node.title = snake.moveCount;
 
 			this.currentLevel++;
 			if(LEVELS.length > this.currentLevel){
