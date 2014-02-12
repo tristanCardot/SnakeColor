@@ -208,7 +208,8 @@
 				"FFCCDANAAAMAFAEAAAAABAGAAAOABAB",
 				"HLBDFABAAAAABBBAAABBABAAABAABADABABADMDAABAADAABABAAABAABAAABABAALAABBALELABBBALABB",
 				"LLAEUAAAABAANAAAAAPABAAAOAMAAAAOAAPAANAMAMAAABAABBAAABAEANAAAANAAGAFAAPAAAAAAHABAAABBOABAPAOAAAAAAAAAAAANAOAAMAABMAAAAAPAAABAAA",
-				"FNGEJAAAAAAAAAAAAABNNABAMHAODAAABAMAGBEBAABAMAAODAAABAMFAABPPAAAAAAAAAA",
+				"FNGEKAAAAAAAAAAAAABNNABAMHAODAAABAMAGBEBAABAMAAODAAABAMFAABPPAAAAAAAAAA",
+				"JJAEEABBAAAAABBBBAAAAABBAABAAABAAAAABMBAAAAAANTPAAAAAABMBAAAAABAAABAAABAAAAABAHAAAAAAAF"
 			],
 
 			GUI = {
@@ -242,7 +243,7 @@
 				]
 			};
 
-		var GEO = {
+		var GEO = {   
 			snakePart: (function(){
 				var geo = new THREE.Geometry();
 				geo.vertices = convertArray([
@@ -802,7 +803,7 @@
 					animationManager.pushAnimation(mesh, [
 						['position', {from: new V3(this.pos.x +vx *.6, 0, this.pos.y +vz *.6), to: mesh.position.clone()}],
 						['scale', {from: new V3(.1,.1,.1), to: new V3(1,1,1)}]
-					], this.speed-50, 0);
+					], this.speed*.75, 0);
 
 					var camP = renderManager.cam.position.clone();
 
@@ -1977,13 +1978,15 @@
 			var node = document.getElementById('levelList').childNodes[this.currentLevel]
 			node.className +=' finished';
 			node.title = snake.moveCount;
-
 			this.currentLevel++;
+
 			if(LEVELS.length > this.currentLevel){
 				map.updateData(LEVELS[this.currentLevel]);
 				document.getElementById('levelList').childNodes[this.currentLevel].className='active';
+
 			}else{
 				console.log('end');
+				this.currentLevel = 0;
 			}
 		},
 
