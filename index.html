@@ -21,14 +21,19 @@
 
 		body{
 			height:0px;
-			width:0px;
-
+			width:100%;
+			cursor: default;
 			margin:0px;
 		}
 
-		body div{
-			position:absolute;
-
+		body div.menu{
+			position:relative;
+  			margin: auto;
+  			border-top: solid 1px white;
+  			border-bottom: solid 1px white;
+  			background-color: rgba(0,0,0,.6);
+  			top: 50px;
+  			width: 300px;
 		}
 
 		canvas{
@@ -37,6 +42,18 @@
 			left:0px;
 			height:100%;
 			width:100%;
+		}
+
+		button{
+			font-size: 2em;
+			background-color: rgb(200,200,200);
+			border: 0px;
+			cursor: pointer;
+		}
+
+		button:hover{
+			box-shadow: inset 0px 0px 15px white;
+
 		}
 
 		div#craftBox{
@@ -62,6 +79,7 @@
 		}
 
 		div#craftColor{
+			position: relative;
 			height:60px;
 			width:120px;
 		}
@@ -79,7 +97,7 @@
 			box-shadow: inset 0px 0px 6px 2px black, inset 0px 0px 4px 4px rgb(125,125,125);
 		}
 		div#craftColor span.select{
-			box-shadow: inset 0px 0px 6px 2px black, inset 0px 0px 6px 6px rgb(200,200,200);
+			box-shadow: inset 0px 0px 6px 2px black, inset 0px 0px 0px 5px rgb(150,150,150);
 		}
 
 		span.BLACK{ background-color:black;}
@@ -91,24 +109,88 @@
 		span.VIOLET{ background-color:magenta;}
 		span.WHITE{ background-color:white;}
 
+/*main menu // ingame*/
+  		div#mainMenu{
+  			height: 100px;
+  		}
+
+  		div#mainMenu button, div#inGame button{
+  			height: 90px;
+			margin: 5px;
+			width: 138px;
+  		}
+/*level select*/
+		div#levelSelect button{
+  			height: 35px;
+			margin: 10px 85px;
+			width: 130px;
+		}
+
 		div#levelList{
-			top:25px;
-			width:270px;
+			top: 25px;
+			width: 270px;
+			margin: auto;
 		}
 
 		div#levelList span.active{
+			cursor:pointer;
 			background-color:rgba(255,255,255,.5);
+		}
+
+		div#levelList span.active:hover{
+			box-shadow: inset 0px 0px 15px white;
 		}
 
 		div#levelList span{
 			display: inline-block;
 			text-align: center;
-			padding-top:10px;
-			height:20px;
-			width:30px;
+			padding-top: 5px;
+			height: 20px;
+			width: 30px;
 			border:solid 1px black;
 			margin:3px;
+			border-bottom: solid 5px black;
 		}
+
+		div#levelList span.finished{
+			border-bottom: solid 5px white;
+		}
+		div#levelList span.bad{
+			border-bottom: solid 5px red;
+		}
+		div#levelList span.medium{
+			border-bottom: solid 5px yellow;
+		}		
+		div#levelList span.good{
+			border-bottom: solid 5px green;
+		}
+
+/*craft menu*/
+		div#craftMenu button{
+			margin: 3px;
+			width: 142px;
+		}
+		div#craftMenu input{
+			font-size: 2em;
+			width: 137px;
+			margin: 3px;
+		}
+		div#craftMenu input[type="number"]{
+			width: 112px;
+		}
+		div#craftMenu p{
+			font-size: 2em;
+			display: inline-block;
+			text-shadow: 0px 0px 1px white,0px 0px 2px white,0px 0px 3px white;
+			font-weight: bold;
+		}
+
+/*gui player*/
+		div#guiPlayer{
+			position: relative;
+			font-size: 3.5em;
+		}
+
 
 	</style>
 	<script type="text/javascript" charset="UTF-8" src="three.min.js"></script>
@@ -126,7 +208,13 @@
 				"FFCCDANAAAMAFAEAAAAABAGAAAOABAB",
 				"HLBDFABAAAAABBBAAABBABAAABAABADABABADMDAABAADAABABAAABAABAAABABAALAABBALELABBBALABB",
 				"LLAETAAAABAANAAAAAPABAAAOAAAAAAOAAPAANAMAMAAABAABBAAABAEANAAAANAAGAFAAPAAAAAAHABAAABBOABAPAOAAAAAAAAAAAANAOAAMAABMAAAAAPAAABAAA",
-				"FPHEKAAAAAAAAAAAAABNNABAMHABAAAAODMAABAAAGBEBAABAAAAODMAABAAAABAMFAABPPAAAAAAAAAA"
+				"FNGENAAAAAAAAAAAAABNNABAMHAODAAABAMAGBEBAABAMAAODAAABAMFAABPPAAAAAAAAAA",
+				"FNGEPAAAAAAAAAAAAABNNABAMHAODMAABAMAGBEBAABAMAAODMAABAMFAABPPAAAAAAAAAA",
+				"FFAAGAAAMAMAABAAMBBBMAABAAMAMAA",
+				"FFCCDANAAAMAFAEAAAAABAGAAAOABAB",
+				"HLBDFABAAAAABBBAAABBABAAABAABADABABADMDAABAADAABABAAABAABAAABABAALAABBALELABBBALABB",
+				"LLAETAAAABAANAAAAAPABAAAOAAAAAAOAAPAANAMAMAAABAABBAAABAEANAAAANAAGAFAAPAAAAAAHABAAABBOABAPAOAAAAAAAAAAAANAOAAMAABMAAAAAPAAABAAA",
+				"FNGENAAAAAAAAAAAAABNNABAMHAODAAABAMAGBEBAABAMAAODAAABAMFAABPPAAAAAAAAAA"
 			],
 
 			GUI = {
@@ -531,12 +619,14 @@
 			this.maxLength = 5;
 			this.speed = 400;
 			this.nextMove = 0;
+			this.moveCount = 0;
 			this.paused = true;
 
 			this.dir = -1;
 			this.parts = [];
 			this.color = COLOR.GREEN;
 			this.mat = TYPE.LIST[ TYPE.SNAKE].mesh.material;
+			this.nodeScore = null;
 		}
 
 		Snake.prototype = {
@@ -593,6 +683,9 @@
 					default: return;
 				}
 
+				this.moveCount++;
+				this.nodeScore.data = this.moveCount;
+
 				if(this.parts.length > this.maxLength){
 					var part = this.parts[0];
 					var mesh = renderManager.grid[part.x][part.y];
@@ -637,6 +730,7 @@
 			},
 
 			reset : function(){
+				this.moveCount = 0;
 				this.maxLength = 5;
 				this.parts = [map.spawn];
 				this.dir = -1;
@@ -1020,7 +1114,7 @@
 //- RENDERMANAGER
 		function RenderManager(){
 			this.cam = new THREE.PerspectiveCamera(FOV, window.innerWidth/window.innerHeight, 1, 100);
-			this.renderer = new THREE.WebGLRenderer({antialias: false});
+			this.renderer = new THREE.WebGLRenderer({antialias: true});
 			this.renderer.setClearColor( 0x888888, 1);
 
 			this.scene = new THREE.Scene();
@@ -1182,17 +1276,12 @@
 						renderManager.cam.rotation.y = 0;
 						break;
 				}
-
-
-
 			/*
 			renderManager.cam.position.y = 5;
 			renderManager.cam.position.x = 1;
 			renderManager.cam.position.z = 1;
 			renderManager.cam.rotation.x = -Math.PI/2;//-Math.PI/32*14;
 			renderManager.cam.rotation.y = -Math.PI/32;*/
-
-
 			}
 		};
 
@@ -1362,7 +1451,7 @@
 
 			export : function(){
 				if(this.dotCount === 0)
-					return 'if faut au moins 1 point';
+					return '-----';
 
 				var list = [];
 				list.push(this.height, this.width, this.spawn.x, this.spawn.y, this.dotCount&31, this.dotCount>>5);
@@ -1375,7 +1464,7 @@
 			},
 
 			load : function(data){
-				if(data != null && data.indexOf(' ') === -1){
+				if(data != null && data.indexOf('-') === -1){
 					data = stringToArray(data);
 
 					this.height = data[0];
@@ -1589,7 +1678,7 @@
 			var result = "";
 
 			for(var i=0; i<LEVELS.length; i++)
-				result+="<span>"+i+"</span>";
+				result+="<span title='?'>"+i+"</span>";//TOTO title = best score
 
 			levelList.innerHTML = result;
 			levelList.addEventListener('click', function(e){self.selectLevel(e);}, false);
@@ -1607,6 +1696,7 @@
 				document.getElementById('craftBox'),
 				document.getElementById('craftMenu')
 			];
+			//TODO facto function => switch case
 
 			document.getElementsByClassName('play')[0].onclick = function(){
 				renderManager.startUpdate();
@@ -1636,6 +1726,12 @@
 				renderManager.renderFrame();
 				self.setActive(GUI.CRAFTBOX);
 			};
+
+			document.getElementsByClassName('resume')[0].onclick = function(){
+				snake.paused = false;
+				self.setActive(GUI.GUIPLAYER);
+			}
+
 
 			window.addEventListener('keydown', function(e){self.keyDown(e);}, false);
 
@@ -1672,6 +1768,10 @@
 		},
 
 		startNextLevel : function(){
+			var node = document.getElementById('levelList').childNodes[this.currentLevel]
+			node.className +=' finished';
+			node.title = sneak.dotCount; 
+
 			this.currentLevel++;
 			if(LEVELS.length > this.currentLevel){
 				map.updateData(LEVELS[this.currentLevel]);
@@ -1754,6 +1854,7 @@
 		window.addEventListener('load', function(){
 			document.body.insertBefore(CANVAS, document.body.firstChild);
 			renderManager.cam.rotation.order = 'YXZ';
+			snake.nodeScore = document.getElementById('guiPlayer').firstChild;
 			//renderManager.renderFrame();
 		}, false);
 
@@ -1796,34 +1897,35 @@
 			<span class='VIOLET'></span>
 			<span class='WHITE'></span>
 		</div>
-		<div id='craftGeo'>
+		<div id='craftGeo' class='menu'>
 			<span></span>
 		</div>
 	</div>
 
 	<div id='guiPlayer' style='display:none;'>0</div>
 
-	<div id='inGame' style='display:none;'>
+	<div id='inGame' class='menu' style='display:none;'>
 		<button class='quit'>quitter</button>
+		<button class='resume'>retour</button>
 	</div>
 
-	<div id='mainMenu'>
+	<div id='mainMenu' class='menu'>
 		<button class='play'>jouer</button>
 		<button class='build'>créer</button>
 	</div>
 
-	<div id='levelSelect' style='display:none;'>
+	<div id='levelSelect' class='menu' style='display:none;'>
 		<div id='levelList'></div>
-		<button class='quit'>quitter</button>
+		<button class='quit'>retour</button>
 	</div>
 
-	<div id='craftMenu' style='display:none;'>
+	<div id='craftMenu' class='menu' style='display:none;'>
 		<button class='quit'>quitter</button>
 		<button class='clear'>clear</button>
 		<button class='load'>load</button>
-		<input id='levelData' type='text'><br/>
-		hauteur: <input id='levelHeight' type='number' value='10' MIN=5 MAX=30>
-		largeur: <input id='levelWidth' type='number' value='10' MIN=5 MAX=30><br/>
+		<input id='levelData' type='text'>
+		<p>H</p><input id='levelHeight' type='number' value='10' MIN=5 MAX=30>
+		<p>L</p><input id='levelWidth' type='number' value='10' MIN=5 MAX=30>
 	</div>
 </body>
 </html>
