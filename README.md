@@ -1,4 +1,4 @@
 SnakeColor
 ==========
 
-Un petit jeu de sneak!
+Un petit jeu de snake!
