@@ -109,7 +109,7 @@
 		span.VIOLET{ background-color:magenta;}
 		span.WHITE{ background-color:white;}
 
-/*main menu // ingame*/
+ /*main menu // ingame*/
   		div#mainMenu{
   			height: 100px;
   		}
@@ -119,7 +119,7 @@
 			margin: 5px;
 			width: 138px;
   		}
-/*level select*/
+ /*level select*/
 		div#levelSelect button{
   			height: 35px;
 			margin: 10px 85px;
@@ -153,19 +153,19 @@
 		}
 
 		div#levelList span.finished{
-			border-bottom: solid 5px white;
+			border-bottom: solid 5px rgb(125, 125, 125);
 		}
-		div#levelList span.bad{
-			border-bottom: solid 5px red;
+		div#levelList span.copper{
+			border-bottom: solid 5px rgb(185, 89, 0);
 		}
-		div#levelList span.medium{
-			border-bottom: solid 5px yellow;
+		div#levelList span.silver{
+			border-bottom: solid 5px rgb(230, 230, 230);
 		}		
-		div#levelList span.good{
-			border-bottom: solid 5px green;
+		div#levelList span.gold{
+			border-bottom: solid 5px rgb(255, 240, 63);
 		}
 
-/*craft menu*/
+ /*craft menu*/
 		div#craftMenu button{
 			margin: 3px;
 			width: 142px;
@@ -179,18 +179,23 @@
 			width: 112px;
 		}
 		div#craftMenu p{
+			margin:0px;
 			font-size: 2em;
 			display: inline-block;
 			text-shadow: 0px 0px 1px white,0px 0px 2px white,0px 0px 3px white;
 			font-weight: bold;
 		}
 
-/*gui player*/
+		div#craftMenu p.score{
+			text-align: center;
+			width: 172px;
+		}
+
+ /*gui player*/
 		div#guiPlayer{
 			position: relative;
 			font-size: 3.5em;
 		}
-
 
 	</style>
 	<script type="text/javascript" charset="UTF-8" src="three.min.js"></script>
@@ -204,12 +209,12 @@
 			CANVAS,
 
 			LEVELS = [
-				"FFAAGAAAMAMAABAAMBBBMAABAAMAMAA",
-				"FFCCDANAAAMAFAEAAAAABAGAAAOABAB",
-				"HLBDFABAAAAABBBAAABBABAAABAABADABABADMDAABAADAABABAAABAABAAABABAALAABBALELABBBALABB",
-				"LLAEUAAAABAANAAAAAPABAAAOAMAAAAOAAPAANAMAMAAABAABBAAABAEANAAAANAAGAFAAPAAAAAAHABAAABBOABAPAOAAAAAAAAAAAANAOAAMAABMAAAAAPAAABAAA",
-				"FNGEKAAAAAAAAAAAAABNNABAMHAODAAABAMAGBEBAABAMAAODAAABAMFAABPPAAAAAAAAAA",
-				"JJAEEABBAAAAABBBBAAAAABBAABAAABAAAAABMBAAAAAANTPAAAAAABMBAAAAABAAABAAABAAAAABAHAAAAAAAF"
+				"FFAAGAAAAAAAAAMAMAABAAMBBBMAABAAMAMAA",
+				"FFCCDAAAAAAANAAAMAFAEAAAAABAGAAAOABAB",
+				"HLBDFAAAAAAABAAAAABBBAAABBABAAABAABADABABADMDAABAADAABABAAABAABAAABABAALAABBALELABBBALABB",
+				"LLAEUAAAAAAAAAABAANAAAAAPABAAAOAMAAAAOAAPAANAMAMAAABAABBAAABAEANAAAANAAGAFAAPAAAAAAHABAAABBOABAPAOAAAAAAAAAAAANAOAAMAABMAAAAAPAAABAAA",//154
+				"FNGEKAAAAAAAAAAAAAAAAAAABNNABAMHAODAAABAMAGBEBAABAMAAODAAABAMFAABPPAAAAAAAAAA",
+				"JJAEEAAAAAAABBAAAAABBBBAAAAABBAABAAABAAAAABMBAAAAAANTPAAAAAABMBAAAAABAAABAAABAAAAABAHAAAAAAAF"
 			],
 
 			GUI = {
@@ -897,7 +902,12 @@
 
 			this.height = 0;
 			this.width = 0;
+
 			this.dotCount = 0;
+			this.gold = 0;
+			this.silver = 0;
+			this.copper = 0;
+
 			this.spawn = {x: 0, y: 0};
 		}
 
@@ -909,7 +919,11 @@
 				this.height = result[0];
 				this.width = result[1];
 				this.spawn = {x: result[2]+1, y: result[3]+1};
+
 				this.dotCount = result[4]+ (result[5]<<5);
+				this.gold =  result[6]+ (result[7]<<5);
+				this.silver =  result[8]+ (result[9]<<5);
+				this.copper =  result[10]+ (result[11]<<5);
 
 				renderManager.initGrid(this.height+2, this.width+2);
 
@@ -923,7 +937,7 @@
 						if(i<0 || j<0 || i>=this.width || j>=this.height)
 							select = TYPE.LIST[ TYPE.WALL ];
 						else
-							select = TYPE.LIST[ result[i *map.height +j +6] ];
+							select = TYPE.LIST[ result[i *map.height +j +12] ];
 
 
 						if(select !== undefined){
@@ -963,6 +977,7 @@
 				this.dotCount += offset;
 
 				if(this.dotCount <= 0){
+
 					actionManager.startNextLevel();
 					return false;
 				}
@@ -991,7 +1006,7 @@
 
 						for(var i=0, j; i<map.width; i++)
 							for(var j=0; j<map.height; j++){
-								select = TYPE.LIST[ map.ld[i *map.height +j +6] ];
+								select = TYPE.LIST[ map.ld[i *map.height +j +12] ];
 
 								if(select !== undefined)
 									if(select.ground !== true){
@@ -1330,7 +1345,7 @@
 				this.cam.aspect = window.innerWidth /window.innerHeight;
 				this.cam.updateProjectionMatrix();
 
-				this.renderer.setSize( window.innerWidth, window.innerHeight);
+				this.renderer.setSize( window.innerWidth*.75, window.innerHeight*.75);
 
 				SCREENY = window.innerHeight/2 * ( Math.cos( FOV/180*Math.PI/2 ) / Math.sin(FOV/180*Math.PI/2) );
 				this.renderFrame();
@@ -1446,7 +1461,13 @@
 			this.buildArea = [];
 			this.height = 10;
 			this.width = 10;
+
 			this.dotCount = 0;
+			this.gold = 0;
+			this.silver = 0;
+			this.copper = 0;
+
+			this.spawn = {x:0, y:0};
 
 			this.mouse = {
 				isDown : false,
@@ -1455,8 +1476,6 @@
 				posX : 0,
 				posY : 0
 			};
-
-			this.spawn = {x:0, y:0};
 
 			this.selectNode = null;
 			this.selectedColor = 0;
@@ -1615,13 +1634,20 @@
 				if(this.dotCount === 0)
 					return '-----';
 
-				var list = [];
-				list.push(this.height, this.width, this.spawn.x, this.spawn.y, this.dotCount&31, this.dotCount>>5);
+				var list = [
+					this.height, this.width, 
+					this.spawn.x, this.spawn.y, 
+					this.dotCount&31, this.dotCount>>5,
+					this.gold&31, this.gold>>5,
+					this.silver&31, this.silver>>5,
+					this.copper&31, this.copper>>5
+				];
+
 				for(var i=0, j; i<this.buildArea.length; i++)
 					for(j=0; j<this.buildArea[i].length; j++)
 						list.push(this.buildArea[i][j].data);
 
-				list[this.spawn.x *this.height +this.spawn.y  +6] = 0;
+				list[this.spawn.x *this.height +this.spawn.y  +12] = 0;
 				return arrayToString(list);
 			},
 
@@ -1635,6 +1661,9 @@
 					this.spawn.y = data[3];
 
 					this.dotCount = data[4]+ (data[5]<<5);
+					this.gold = data[6]+ (data[7]<<5);
+					this.silver = data[8]+ (data[9]<<5);
+					this.copper = data[10]+ (data[11]<<5);
 
 				}else{
 					data = [];
@@ -1645,6 +1674,9 @@
 					this.spawn.y = 0;
 
 					this.dotCount = 0;
+					this.gold = 0;
+					this.silver = 0;
+					this.copper = 0;
 				}
 
 				this.setSize(this.height, this.width);
@@ -1660,7 +1692,7 @@
 					this.buildArea.push([]);
 
 					for(j=0; j<this.height; j++){
-						type = data[i*this.height +j +6] || TYPE.GROUND;
+						type = data[i*this.height +j +12] || TYPE.GROUND;
 
 						mesh = TYPE.LIST[ type ].mesh.clone();
 						mesh.position.x = i;
@@ -1688,7 +1720,6 @@
 			updateSelectedId : function(){
 				if(this.selectedType<3)
 					this.selectedId = this.selectedType;
-
 				else
 					this.selectedId = this.selectedType + this.selectedColor;
 			},
@@ -1705,7 +1736,6 @@
 			updatePos : function(typeId, x, y){
 				if(x === this.spawn.x && y === this.spawn.y)
 					return;
-
 
 				this.clearPos(this.buildArea[x][y]);
 
@@ -1849,13 +1879,40 @@
 			var levelList = document.getElementById('levelList');
 			var result = "";
 
-			for(var i=0; i<LEVELS.length; i++)
-				result+="<span title='?'>"+i+"</span>";//TOTO title = best score
+			for(var i=0, achived, lvl, s; i<LEVELS.length; i++){
+				if(save[i] === undefined)
+					save.push(0);
+
+				s = save[i*2]+(save[i*2+1]<<5);
+
+				if(s !== 0){
+					lvl = stringToArray(LEVELS[i].slice(6,12));
+
+					if(lvl[0] +(lvl[1]<<5) > s)
+						achived = 'gold';
+
+					else if(lvl[2] +(lvl[3]<<5) > s)
+						achived = 'silver';
+
+					else if(lvl[4] +(lvl[5]<<5) > s)
+						achived = 'copper';
+
+					else
+						achived = 'finished';
+
+					achived += ' active';
+
+				}else if(achived.length > 8)
+					achived = 'active';
+
+				else
+					achived = '';
+
+				result+="<span title='"+s+"' class='"+achived+"'>"+i+"</span>";
+			}
 
 			levelList.innerHTML = result;
 			levelList.addEventListener('click', function(e){self.selectLevel(e);}, false);
-			levelList.firstChild.className='active';
-
 
 			this.list = [
 				document.getElementById('mainMenu'),
@@ -1897,11 +1954,27 @@
 			window.addEventListener('keydown', function(e){self.keyDown(e);}, false);
 
 			document.getElementById('levelHeight').addEventListener('change', function(){
-				builder.setSize(parseInt(this.value), builder.width);
+				var value = checkInput(this, parseInt(this.value));
+				builder.setSize(value, builder.width);
 			});
+
 			document.getElementById('levelWidth').addEventListener('change', function(){
-				builder.setSize(builder.height, parseInt(this.value));
+				var value = checkInput(this, parseInt(this.value));
+				builder.setSize(builder.height, value);
 			});
+
+			document.getElementById('gold').addEventListener('change', function(){
+				builder.gold = checkInput(this, parseInt(this.value));
+			});
+			document.getElementById('silver').addEventListener('change', function(){
+				builder.silver = checkInput(this, parseInt(this.value));
+			});
+			document.getElementById('copper').addEventListener('change', function(){
+				builder.copper = checkInput(this, parseInt(this.value));
+			});
+
+
+
 
 
 			snake.paused = true;
@@ -1963,21 +2036,30 @@
 		},
 
 		selectLevel : function(e){
-			if(e.target.localName !== 'span' || e.target.className.indexOf('active') !== 0)
+			if(e.target.localName !== 'span' || e.target.className.indexOf('active') === -1)
 				return;
 
 			var index = e.target.firstChild.data;
 			this.currentLevel = index;
 			map.updateData(LEVELS[index]);
-			//TODO ANIMATION
 
 			this.setActive(GUI.GUIPLAYER);
 		},
 
 		startNextLevel : function(){
-			var node = document.getElementById('levelList').childNodes[this.currentLevel]
+			var node = document.getElementById('levelList').childNodes[this.currentLevel];
 			node.className +=' finished';
 			node.title = snake.moveCount;
+
+			var score = save[this.currentLevel*2] + (save[this.currentLevel*2+1]>>5);
+
+			if(snake.moveCount < score || score === 0){
+				save[this.currentLevel*2] = snake.moveCount &31;
+				save[this.currentLevel*2+1] = snake.moveCount >>5;
+
+				localStorage.setItem('save', arrayToString(save));
+			}
+
 			this.currentLevel++;
 
 			if(LEVELS.length > this.currentLevel){
@@ -1987,6 +2069,7 @@
 			}else{
 				console.log('end');
 				this.currentLevel = 0;
+				map.updateData(LEVELS[this.currentLevel]);
 			}
 		},
 
@@ -2028,6 +2111,7 @@
 								break;
 							case GUI.CRAFTMENU:
 									this.setActive(GUI.CRAFTBOX,4);
+								break;
 						}
 					break;
 			}
@@ -2036,6 +2120,16 @@
 
 
 //- MAIN
+		var save = (function(){
+			var result = stringToArray(localStorage.getItem('save')) || [];
+
+			for(var i=result.length; i<LEVELS.length*2; i++)
+				result.push(0);
+
+			localStorage.setItem('save', arrayToString(result));
+			return result;
+		})();
+
 		var snake = new Snake();
 		var map = new Map();
 		var renderManager = new RenderManager();
@@ -2047,10 +2141,12 @@
 			document.body.insertBefore(CANVAS, document.body.firstChild);
 			renderManager.cam.rotation.order = 'YXZ';
 			snake.nodeScore = document.getElementById('guiPlayer').firstChild;
-			//renderManager.renderFrame();
 		}, false);
 
 		function stringToArray(string){
+			if(!string)
+				return undefined;
+
 			var result = [];
 
 			for(var i=0, code; i<string.length; i++){
@@ -2065,6 +2161,9 @@
 		}
 
 		function arrayToString(array){
+			if(!array)
+				return undefined;
+
 			var result = "";
 
 			for(var i=0; i<array.length; i++)
@@ -2075,6 +2174,22 @@
 
 			return result;
 		}
+
+		function checkInput(input, value){
+			Ginput = input;
+			if(value > input.max){
+				input.value = input.max;
+				return parseInt(input.max);
+			}
+			
+			if(value < input.min || isNaN(value)){
+				input.value = input.min;
+				return parseInt(input.min);
+			}
+
+			return value;
+		}
+		var Ginput;
 	</script>
 </head>
 <body>
@@ -2116,8 +2231,11 @@
 		<button class='clear'>clear</button>
 		<button class='load'>load</button>
 		<input id='levelData' type='text'>
-		<p>H</p><input id='levelHeight' type='number' value='10' MIN=5 MAX=30>
-		<p>L</p><input id='levelWidth' type='number' value='10' MIN=5 MAX=30>
+		<p>H</p><input id='levelHeight' type='number' value='10' min='5' max='30'>
+		<p>L</p><input id='levelWidth' type='number' value='10' min='5' max='30'>
+		<p class='score'>Or</p><input id='gold' type='number' value='10' min='1' max='1000'><br/>
+		<p class='score'>Argent</p><input id='silver' type='number' value='10' min='1' max='1000'><br/>
+		<p class='score'>Cuivre</p><input id='copper' type='number' value='10' min='1' max='1000'>
 	</div>
 </body>
 </html>
