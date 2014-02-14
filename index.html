@@ -177,6 +177,7 @@
 		}
 		div#craftMenu input[type="number"]{
 			width: 112px;
+			background-color: rgb(120,120,120);
 		}
 		div#craftMenu p{
 			margin:0px;
@@ -733,6 +734,8 @@
 			},
 
 			setDir : function(newDir){
+				newDir = (newDir + this.camRotation) %4;
+
 				var lastPart = this.parts[this.parts.length-2];
 				if(lastPart === undefined){
 					this.dir = newDir;
@@ -788,7 +791,11 @@
 					var part = this.parts[0];
 					var mesh = renderManager.grid[part.x][part.y];
 
-					map.clearPos(part.x, part.y);
+					if(TYPE.BLOCK[ part.type ])
+						map.setPos(part.x, part.y, TYPE.LIST[part.type]);
+					else
+						map.setPos(part.x, part.y, TYPE.LIST[TYPE.GROUND]);
+
 					this.parts = this.parts.splice(1);
 
 					animationManager.pushAnimation(mesh, [
@@ -797,8 +804,8 @@
 					], this.speed, 0,
 					function(mesh){renderManager.clearMesh(mesh);});
 				}
-				if(map.moveIn(this)){
 
+				if(map.moveIn(this)){
 					var lastPart = this.parts[this.parts.length-1];
 
 					var mesh = renderManager.craftMesh(TYPE.LIST[TYPE.SNAKE], this.pos.x, this.pos.y);
@@ -816,7 +823,7 @@
 						['position', {from: camP, to: new V3(this.pos.x+this.off.x, camP.y, this.pos.y+this.off.y)}]
 					], this.speed, 0);
 
-					this.parts.push({x: this.pos.x, y: this.pos.y});
+					this.parts.push({x: this.pos.x, y: this.pos.y, type: map.getType(this.pos)});
 					map.setPos(this.pos.x, this.pos.y, TYPE.LIST[TYPE.SNAKE]);
 				}else
 					map.reset();
@@ -965,8 +972,8 @@
 				return this.grid[snake.pos.x][snake.pos.y].moveIn(snake, renderManager.grid[snake.pos.x][snake.pos.y]);
 			},
 
-			clearPos : function(x, y){
-				this.grid[x][y] = TYPE.LIST[TYPE.GROUND];
+			getType : function(pos){
+				return this.grid[pos.x][pos.y].id;
 			},
 
 			setPos : function(x, y, type){
@@ -1094,7 +1101,8 @@
 
 
 //- ENTITIES CONSTRUCTOR + STATIC
-		function SnakePart(){
+		function SnakePart(id){
+			this.id = id;
 			this.color;
 			this.mesh = this.craftMesh();
 		}
@@ -1113,7 +1121,8 @@
 		};
 
 
-		function ColorSwaper(color, pos){
+		function ColorSwaper(id, color, pos){
+			this.id = id;
 			this.color = color;
 			this.mesh = this.craftMesh();
 		}
@@ -1139,7 +1148,8 @@
 			}
 		};
 
-		function Block(type){
+		function Block(id, type){
+			this.id = id;
 			this.type = type;
 			this.mesh = this.craftMesh();
 			this.ground = true;
@@ -1204,7 +1214,8 @@
 			}
 		};
 
-		function Dot(color){
+		function Dot(id, color){
+			this.id = id;
 			this.color = color;
 			this.mesh = this.craftMesh();
 		}
@@ -1264,30 +1275,30 @@
 			DOT : {11:1, 12:1, 13:1, 14:1, 15:1, 16:1, 17:1, 18:1},
 
 			LIST: [
-				new Block(0),
-				new Block(2),
-				new SnakePart(),
+				new Block(0, 0),
+				new Block(1, 2),
+				new SnakePart(2),
 
-				new ColorSwaper( COLOR.BLACK),
-				new ColorSwaper( COLOR.GREEN),
-				new ColorSwaper( COLOR.RED),
-				new ColorSwaper( COLOR.YELLOW),
-				new ColorSwaper( COLOR.BLUE),
-				new ColorSwaper( COLOR.CYAN),
-				new ColorSwaper( COLOR.VIOLET),
-				new ColorSwaper( COLOR.WHITE),
+				new ColorSwaper(3, COLOR.BLACK),
+				new ColorSwaper(4, COLOR.GREEN),
+				new ColorSwaper(5, COLOR.RED),
+				new ColorSwaper(6, COLOR.YELLOW),
+				new ColorSwaper(7, COLOR.BLUE),
+				new ColorSwaper(8, COLOR.CYAN),
+				new ColorSwaper(9, COLOR.VIOLET),
+				new ColorSwaper(10, COLOR.WHITE),
 
-				new Dot( COLOR.BLACK),
-				new Dot( COLOR.GREEN),
-				new Dot( COLOR.RED),
-				new Dot( COLOR.YELLOW),
-				new Dot( COLOR.BLUE),
-				new Dot( COLOR.CYAN),
-				new Dot( COLOR.VIOLET),
-				new Dot( COLOR.WHITE),
+				new Dot(11, COLOR.BLACK),
+				new Dot(12, COLOR.GREEN),
+				new Dot(13, COLOR.RED),
+				new Dot(14, COLOR.YELLOW),
+				new Dot(15, COLOR.BLUE),
+				new Dot(16, COLOR.CYAN),
+				new Dot(17, COLOR.VIOLET),
+				new Dot(18, COLOR.WHITE),
 
-				new Block(1),
-				new Block(-1)
+				new Block(19, 1),
+				new Block(20,-1)
 			]
 		};
 		TYPE.LIST['undefined'] = TYPE.LIST[0];
@@ -1345,7 +1356,7 @@
 				this.cam.aspect = window.innerWidth /window.innerHeight;
 				this.cam.updateProjectionMatrix();
 
-				this.renderer.setSize( window.innerWidth*.75, window.innerHeight*.75);
+				this.renderer.setSize( window.innerWidth*.80, window.innerHeight*.80);
 
 				SCREENY = window.innerHeight/2 * ( Math.cos( FOV/180*Math.PI/2 ) / Math.sin(FOV/180*Math.PI/2) );
 				this.renderFrame();
@@ -1365,17 +1376,12 @@
 						this.grid[i].push(null);
 				}
 
-				for(var i=0, j, endI=(width>>3)+1, endJ=(height>>3)+1; i<endI; i++){
-					this.ground.push([]);
+				var mat = MAT.grayGradient.clone();
+				mat.attributes = {grad : {type: 'f', value: []}};
 
-					for(j=0; j<endJ; j++){
-						var mat = MAT.grayGradient.clone();
-						mat.attributes = {grad : {type: 'f', value: []}};
+				this.ground.push(new THREE.Mesh(new THREE.Geometry(), mat));
+				this.scene.add( this.ground[0]);
 
-						this.ground[i].push(new THREE.Mesh(new THREE.Geometry(), mat));
-						this.scene.add( this.ground[i][j] );
-					}
-				}
 			},
 
 			clearGrid : function(){
@@ -1420,21 +1426,14 @@
 				var ground = type.mesh.clone();
 				ground.position.x = x;
 				ground.position.z = y;
+				THREE.GeometryUtils.merge(this.ground[0].geometry, ground);
 
-				x>>=3;
-				y>>=3;
-
-				THREE.GeometryUtils.merge(this.ground[x][y].geometry, ground);
-
-				var grad = this.ground[x][y].material.attributes.grad;
+				var grad = this.ground[0].material.attributes.grad;
 				grad.value = grad.value.concat(ground.material.attributes.grad.value);
 			},
 
 			clearGround : function(){
-				for(var i=0, j; i<this.ground.length; i++)
-					for(j=0; j<this.ground[0].length; j++)
-						if(this.ground[i][j] !== null)
-							this.scene.remove(this.ground[i][j]);
+				this.scene.remove(this.ground[0]);
 			},
 
 			renderFrame : function(){
@@ -1879,7 +1878,7 @@
 			var levelList = document.getElementById('levelList');
 			var result = "";
 
-			for(var i=0, achived, lvl, s; i<LEVELS.length; i++){
+			for(var i=0, achived="finished active", lvl, s; i<LEVELS.length; i++){
 				if(save[i] === undefined)
 					save.push(0);
 
@@ -1972,10 +1971,6 @@
 			document.getElementById('copper').addEventListener('change', function(){
 				builder.copper = checkInput(this, parseInt(this.value));
 			});
-
-
-
-
 
 			snake.paused = true;
 			this.activeNode = document.getElementById('mainMenu');
@@ -2181,7 +2176,7 @@
 				input.value = input.max;
 				return parseInt(input.max);
 			}
-			
+
 			if(value < input.min || isNaN(value)){
 				input.value = input.min;
 				return parseInt(input.min);
