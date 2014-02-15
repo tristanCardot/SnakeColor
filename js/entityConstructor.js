@@ -161,11 +161,18 @@ CamRotator.prototype = {
 function Arrow(id, dir){
 	this.id = id;
 	this.dir = dir;
+
+	this.mesh = this.craftMesh();
 }
 
 Arrow.prototype = {
 	moveIn : function(snake, mesh){
+		if(this.dir !== (snake.dir+2) %4){
+			snake.dir = this.dir;
+			snake.lockedDir = true;
+		}
 
+		return true;
 	},
 
 	craftMesh : function(){
@@ -176,7 +183,7 @@ Arrow.prototype = {
 
 		var mesh = new THREE.Mesh(GEO.arrow, mat);
 		mesh.rotation.y = this.dir *Math.PI /2;
-		return ;
+		return mesh;
 	}
 };
 

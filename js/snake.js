@@ -3,10 +3,13 @@ function Snake(){
 	this.off = {x: 0, y: 0};
 	this.maxLength = 5;
 	this.speed = 400;
+
 	this.nextMove = 0;
 	this.moveCount = 0;
-	this.paused = true;
 	this.camRotation = 0;
+
+	this.paused = true;
+	this.lockedDir = false;
 
 	this.dir = -1;
 	this.parts = [];
@@ -21,6 +24,9 @@ Snake.prototype = {
 	},
 
 	setDir : function(newDir){
+		if(this.lockedDir)
+			return;
+
 		newDir = (newDir + this.camRotation) %4;
 
 		var lastPart = this.parts[this.parts.length-2];
@@ -71,6 +77,7 @@ Snake.prototype = {
 			default: return;
 		}
 
+		this.lockedDir = false;
 		this.moveCount++;
 		this.nodeScore.data = this.moveCount;
 
@@ -91,6 +98,9 @@ Snake.prototype = {
 			function(mesh){renderManager.clearMesh(mesh);});
 		}
 
+		var vx = (this.dir === 1 ? 1 : this.dir === 3 ? -1 : 0);
+		var vz = (this.dir === 0 ? 1 : this.dir === 2 ? -1 : 0);
+
 		if(map.moveIn(this)){
 			var lastPart = this.parts[this.parts.length-1];
 
@@ -98,14 +108,12 @@ Snake.prototype = {
 			mesh.position.x = this.pos.x;
 			mesh.position.z = this.pos.y;
 			renderManager.addMesh(mesh);
-
-			var vx = (this.dir === 1 ? 1 : this.dir === 3 ? -1 : 0);
-			var vz = (this.dir === 0 ? 1 : this.dir === 2 ? -1 : 0);
-
+			
 			animationManager.pushAnimation(mesh, [
 				['position', {from: new V3(this.pos.x +vx *.6, 0, this.pos.y +vz *.6), to: mesh.position.clone()}],
 				['scale', {from: new V3(.1,.1,.1), to: new V3(1,1,1)}]
 			], this.speed*.75, 0);
+
 
 			var camP = renderManager.cam.position.clone();
 
