@@ -215,9 +215,20 @@ var TYPE = {
 
 	SNAKE: 2,
 
-	SWAPER: {3:1, 4:1, 5:1, 6:1, 7:1, 8:1, 9:1, 10:1},
-	DOT : {11:1, 12:1, 13:1, 14:1, 15:1, 16:1, 17:1, 18:1},
-	REUSABLE : {19:1, 20:1, 21:1, 22:1, 23:1, 24:1},
+	SWAPER: 3,
+	DOT : 11,
+	BANNED : 25,
+
+	COLOR : {3:1, 4:1, 5:1, 6:1, 7:1, 8:1, 9:1, 10:1,
+			 11:1, 12:1, 13:1, 14:1, 15:1, 16:1, 17:1, 18:1,
+			 25:1, 26:1, 27:1, 28:1, 29:1, 30:1, 31:1, 32:1},
+
+	CAMROTATOR : 19,
+	ARROW : 21,
+
+	REUSABLE : {19:1, 20:1,
+				21:1, 22:1, 23:1, 24:1,
+			    25:1, 26:1, 27:1, 28:1, 29:1, 30:1, 31:1, 32:1},
 
 	LIST: [
 		new Block(0, 0),
@@ -252,7 +263,12 @@ var TYPE = {
 
 		new BannedColor(25, COLOR.BLACK),
 		new BannedColor(26, COLOR.GREEN),
-		new BannedColor(27, COLOR.RED)
+		new BannedColor(27, COLOR.RED),
+		new BannedColor(28, COLOR.YELLOW),
+		new BannedColor(29, COLOR.BLUE),
+		new BannedColor(30, COLOR.CYAN),
+		new BannedColor(31, COLOR.VIOLET),
+		new BannedColor(32, COLOR.WHITE)
 	]
 };
 TYPE.LIST['undefined'] = TYPE.LIST[0];

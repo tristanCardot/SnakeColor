@@ -23,10 +23,10 @@ Map.prototype = {
 		this.width = result[1];
 		this.spawn = {x: result[2]+1, y: result[3]+1};
 
-		this.dotCount = result[4]+ (result[5]<<5);
-		this.gold =  result[6]+ (result[7]<<5);
-		this.silver =  result[8]+ (result[9]<<5);
-		this.copper =  result[10]+ (result[11]<<5);
+		this.dotCount = result[4]+ (result[5]<<6);
+		this.gold =  result[6]+ (result[7]<<6);
+		this.silver =  result[8]+ (result[9]<<6);
+		this.copper =  result[10]+ (result[11]<<6);
 
 		renderManager.initGrid(this.height+2, this.width+2);
 

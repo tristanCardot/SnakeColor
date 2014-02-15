@@ -18,8 +18,9 @@ function Builder(){
 		posY : 0
 	};
 
-	this.selectNode = null;
+	this.activeNode;
 	this.selectedColor = 0;
+	this.selectedDir = 0;
 	this.selectedType = TYPE.GROUND;
 	this.selectedId = 0;
 
@@ -79,8 +80,6 @@ function Builder(){
 
 Builder.prototype = {
 	bindBuildBox : function(self){
-		this.selectNode = document.getElementById('craftColor').getElementsByTagName('span')[0];
-
 		document.getElementById('craftColor').addEventListener('click', function(e){
 			var color = e.target.className.split(' ')[0];
 
@@ -90,12 +89,24 @@ Builder.prototype = {
 			self.selectedColor = COLOR[color];
 			self.updateSelectedId();
 
+			var last = this.getElementsByClassName('select')[0];
+			last.className = last.className.split(' ')[0];
+
 			e.target.className = color +' select';
+		}, false);
 
-			if(self.selectNode !== null)
-				self.selectNode.className = self.selectNode.className.split(' ')[0];
+		document.getElementById('craftDir').addEventListener('click', function(e){
+			var dir = parseInt( e.target.dataset.dir );
+		window.spanS = e.target;
+			if(isNaN(dir) || dir>4)
+				return;
 
-			self.selectNode = e.target;
+			self.selectedDir = dir;
+			self.updateSelectedId();
+
+			this.getElementsByClassName('select')[0].className = '';
+
+			e.target.className = 'select';
 		}, false);
 
 		document.getElementById('craftGeo').addEventListener('click', function(e){
@@ -107,12 +118,17 @@ Builder.prototype = {
 			switch(off){
 				case 0: case 1: self.selectedType = off;
 					break;
-				case 2: case 3: self.selectedType = 3 + (off-2)*8;
+				case 2: self.selectedType = TYPE.SWAPER;
 					break;
-				case 4: self.selectedType = 2;
+				case 3: self.selectedType = TYPE.DOT;
 					break;
-				case 5: case 6: self.selectedType = off +14;
+				case 4: self.selectedType = TYPE.SNAKE;
 					break;
+				case 5: self.selectedType = TYPE.CAMROTATOR;
+					break;
+				case 6: self.selectedType = TYPE.ARROW;
+					break;
+				case 7: self.selectedType = TYPE.BANNED;
 			}
 			 
 			self.updateSelectedId();
@@ -124,9 +140,9 @@ Builder.prototype = {
 	getBGGeo : function(){
 		var canvas = document.createElement('canvas');
 		canvas.height = 60;
-		canvas.width = 420;
+		canvas.width = 480;
 		var ctx = canvas.getContext('2d');
-		ctx.fillRect(0,0,420,60);
+		ctx.fillRect(0,0,480,60);
 
 		var list = [
 			['#aaa',5,40, 27,50, 54,40, 32,30],
@@ -151,8 +167,11 @@ Builder.prototype = {
 			['#aaa',332,4, 318,18, 332,32, 328,18],
 			['#888',327,27, 331,41, 327,55, 341,41],
 
-			['#aaa',388,4, 402,18, 388,32, 392,18],
-			['#888',393,27, 389,41, 393,55, 379,41]
+			['#aaa',389,11, 376,24, 389,24, 402,24],
+			['#aaa',385,24, 385,47, 393,47, 393,24],
+
+			['#aaa',429,2, 422,9, 470,57, 477,50],
+			['#aaa',470,2, 422,50, 429,57, 477,9]
 		];
 
 		for(var i=0, s; i<list.length; i++){
@@ -176,12 +195,12 @@ Builder.prototype = {
 			return '-----';
 
 		var list = [
-			this.height, this.width, 
-			this.spawn.x, this.spawn.y, 
-			this.dotCount&31, this.dotCount>>5,
-			this.gold&31, this.gold>>5,
-			this.silver&31, this.silver>>5,
-			this.copper&31, this.copper>>5
+			this.height, this.width,
+			this.spawn.x, this.spawn.y,
+			this.dotCount&63, this.dotCount>>6,
+			this.gold&63, this.gold>>6,
+			this.silver&63, this.silver>>6,
+			this.copper&63, this.copper>>6
 		];
 
 		for(var i=0, j; i<this.buildArea.length; i++)
@@ -201,10 +220,10 @@ Builder.prototype = {
 			this.spawn.x = data[2];
 			this.spawn.y = data[3];
 
-			this.dotCount = data[4]+ (data[5]<<5);
-			this.gold = data[6]+ (data[7]<<5);
-			this.silver = data[8]+ (data[9]<<5);
-			this.copper = data[10]+ (data[11]<<5);
+			this.dotCount = data[4]+ (data[5]<<6);
+			this.gold = data[6]+ (data[7]<<6);
+			this.silver = data[8]+ (data[9]<<6);
+			this.copper = data[10]+ (data[11]<<6);
 
 		}else{
 			data = [];
@@ -259,10 +278,23 @@ Builder.prototype = {
 	},
 
 	updateSelectedId : function(){
-		if(this.selectedType<3)
+		if(this.selectedType<3){
 			this.selectedId = this.selectedType;
-		else
+
+		}else if(TYPE.COLOR[ this.selectedType ]){
 			this.selectedId = this.selectedType + this.selectedColor;
+
+			document.getElementById('craftDir').style.display = 'none';
+
+		}else{
+			if(this.selectedType === TYPE.CAMROTATOR)
+				this.selectedId = this.selectedType + (this.selectedDir%2);
+
+			else if(this.selectedType === TYPE.ARROW)
+				this.selectedId = this.selectedType + this.selectedDir;
+
+			document.getElementById('craftDir').style.display = '';
+		}
 	},
 
 	addMesh : function(id, x, y){

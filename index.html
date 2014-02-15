@@ -64,7 +64,7 @@
 
 
 		div#craftGeo:hover{
-			width:420px;
+			width:480px;
 			background-position:0px 0px;
 		}	
 
@@ -78,13 +78,15 @@
 			transition:all 500ms;
 		}
 
-		div#craftColor{
-			position: relative;
+		div#craftColor, div#craftDir{
+			position: absolute;
+			top:0px;
+			left:0px;
 			height:60px;
 			width:120px;
 		}
 
-		div#craftColor span{
+		div#craftColor span, div#craftDir span{
 			border:solid 1px black;
 			height:28px;
 			width:28px;
@@ -93,10 +95,21 @@
 			display: inline-block;
 		}
 
-		div#craftColor span:hover{
+		div#craftDir span{
+			color:white;
+			font-size: 1.5em;
+			text-shadow: 0px 0px 2px white;
+			text-align: center;
+		}
+
+		div#craftDir{
+			background-color: black;
+		}
+
+		div#craftColor span:hover, div#craftDir span:hover{
 			box-shadow: inset 0px 0px 6px 2px black, inset 0px 0px 4px 4px rgb(125,125,125);
 		}
-		div#craftColor span.select{
+		div#craftColor span.select, div#craftDir span.select{
 			box-shadow: inset 0px 0px 6px 2px black, inset 0px 0px 0px 5px rgb(150,150,150);
 		}
 
@@ -108,6 +121,8 @@
 		span.CYAN{ background-color:cyan;}
 		span.VIOLET{ background-color:magenta;}
 		span.WHITE{ background-color:white;}
+
+
 
 	 /*main menu // ingame*/
   		div#mainMenu{
@@ -242,10 +257,17 @@
 
 			for(var i=0, code; i<string.length; i++){
 				code = string.charCodeAt(i);
-				if(code < 97)
-					result.push(code-65);
-				else
+
+				if(code > 96)
 					result.push(code-71);
+				else if(code > 64)
+					result.push(code-65);
+				else if(code > 47)
+					result.push(code+4);
+				else if(code === 43)
+					result.push(62);
+				else if(code === 45)
+					result.push(63);
 			}
 
 			return result;
@@ -258,10 +280,18 @@
 			var result = "";
 
 			for(var i=0; i<array.length; i++)
-				if(array[i]<26)
+				if(array[i] <26)
 					result += String.fromCharCode(array[i]+65);
-				else
+
+				else if(array[i] <52)
 					result += String.fromCharCode(array[i]+71);
+
+				else if(array[i] <62)
+					result += String.fromCharCode(array[i]-4);
+				else if(array[i] === 62)
+					result += '+';
+				else if(array[i] === 63)
+					result += '-';
 
 			return result;
 		}
@@ -296,6 +326,12 @@
 			<span class='CYAN'></span>
 			<span class='VIOLET'></span>
 			<span class='WHITE'></span>
+		</div>
+		<div id='craftDir'>
+			<span class='select' data-dir='0'>⇧</span>
+			<span data-dir='1'>⇦</span>
+			<span data-dir='2'>⇩</span>
+			<span data-dir='3'>⇨</span>
 		</div>
 		<div id='craftGeo' class='menu'>
 			<span></span>
