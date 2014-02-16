@@ -339,9 +339,9 @@ Builder.prototype = {
 	},
 
 	updateDotCount : function(typeId, x, y){
-		if(TYPE.DOT[this.buildArea[x][y].data])
+		if(TYPE.ISDOT[this.buildArea[x][y].data])
 			this.dotCount--;
-		if(TYPE.DOT[typeId])
+		if(TYPE.ISDOT[typeId])
 			this.dotCount++;
 	},
 

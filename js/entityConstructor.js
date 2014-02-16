@@ -49,10 +49,10 @@ function Block(id, type){
 	this.id = id;
 	this.type = type;
 	this.mesh = this.craftMesh();
-	this.ground = true;
 }
 
 Block.prototype = {
+	ground : true,
 	moveIn : function(snake){
 		return this.type !== 1;
 	},
@@ -170,9 +170,11 @@ Arrow.prototype = {
 		if(this.dir !== (snake.dir+2) %4){
 			snake.dir = this.dir;
 			snake.lockedDir = true;
-		}
 
-		return true;
+			return true;
+		}
+		
+		return false;
 	},
 
 	craftMesh : function(){
@@ -218,6 +220,8 @@ var TYPE = {
 	SWAPER: 3,
 	DOT : 11,
 	BANNED : 25,
+
+	ISDOT : {11:1, 12:1, 13:1, 14:1, 15:1, 16:1, 17:1, 18:1},
 
 	COLOR : {3:1, 4:1, 5:1, 6:1, 7:1, 8:1, 9:1, 10:1,
 			 11:1, 12:1, 13:1, 14:1, 15:1, 16:1, 17:1, 18:1,
