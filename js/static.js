@@ -21,7 +21,8 @@ var SCREENY = 0,
 		INGAME : 2,
 		LEVELSELECT : 3,
 		CRAFTBOX : 4,
-		CRAFTMENU : 5
+		CRAFTMENU : 5,
+		TESTER : 6
 	},
 
 	COLOR = {

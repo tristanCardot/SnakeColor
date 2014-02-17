@@ -93,6 +93,11 @@ Map.prototype = {
 
 		this.dotCount = this.ld[4];
 
+		if(actionManager.testMode){
+			actionManager.testMode = false;
+			return;
+		}
+
 		for(var i= (snake.parts.length>25 ? snake.parts.length-25 : 0); i<snake.parts.length; i++)
 			animationManager.pushAnimation(snake.parts[i].mesh, [
 				['rotation', {from: new V3(0,0,0), to: new V3(0, Math.PI*1.5, 0)}],

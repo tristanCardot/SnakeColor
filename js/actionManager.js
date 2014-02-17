@@ -4,6 +4,7 @@ function ActionManager(){
 	this.activeNode = null;
 	this.list = [];
 	this.currentLevel = 0;
+	this.testMode = false;
 
 	var self = this;
 	window.addEventListener('load',function(){self.init(self);},false);
@@ -55,7 +56,8 @@ ActionManager.prototype = {
 			document.getElementById('inGame'),
 			document.getElementById('levelSelect'),
 			document.getElementById('craftBox'),
-			document.getElementById('craftMenu')
+			document.getElementById('craftMenu'),
+			document.getElementById('tester')
 		];
 
 		document.getElementsByClassName('quit')[0].onclick = function(){
@@ -80,11 +82,20 @@ ActionManager.prototype = {
 		};
 		document.getElementsByClassName('load')[0].onclick = function(){
 			self.setActive(GUI.CRAFTBOX, 2);
+		};		
+		document.getElementsByClassName('quit')[3].onclick = function(){
+			self.setActive(GUI.CRAFTBOX, 4);
 		};
 
 		document.getElementsByClassName('resume')[0].onclick = function(){
-			self.setActive(GUI.GUIPLAYER);
+			self.setActive(GUI.GUIPLAYER, 0);
 		};
+
+		document.getElementsByClassName('tester')[0].onclick = function(){
+			self.setActive(GUI.GUIPLAYER, 1);
+		};
+
+
 
 		window.addEventListener('keydown', function(e){self.keyDown(e);}, false);
 
@@ -120,17 +131,24 @@ ActionManager.prototype = {
 
 			break;
 			case GUI.CRAFTBOX:
-				if(id === 0){
+				if(id === 1 && id ===2)
+					builder.load( (id === 2 ? document.getElementById('levelData').value : "") );
+
+				else if(id === 4){
+					renderManager.stopUpdate();
+					renderManager.clearGrid();
+					renderManager.clearGround();
+					snake.clear();
+					animationManager.clear();
+				}
+
+				if(id === 0 || id ===4){
 						snake.setColor(COLOR.GREEN);
 						renderManager.setCamMode(1);
 						builder.bindEvent();
 
-				}else{
+				}else
 					builder.clearArea();
-				}
-
-				if(id !== 4)
-					builder.load( (id === 2 ? document.getElementById('levelData').value : "") );
 
 				builder.renderArea();
 				renderManager.renderFrame();
@@ -151,13 +169,31 @@ ActionManager.prototype = {
 
 			break;
 			case GUI.GUIPLAYER:
+				if(id === 1){
+					var level = document.getElementById('levelData').value;
+					if(level.indexOf('-----') !== -1 || level.length<6)
+						return;
+
+					this.testMode = true;
+
+					map.updateData(level);
+					renderManager.startUpdate();
+					renderManager.setCamMode(0);
+
+					builder.clearArea();
+					builder.clearEvent();
+				}
+
 				snake.paused = false;
+
 			break;
-			case GUI.INGAME:
+			case GUI.INGAME: case GUI.TESTER:
 				snake.paused = true;
+
 			break;
 			case GUI.CRAFTMENU:
 				document.getElementById('levelData').value = builder.export();
+
 			break;
 		}
 
@@ -179,6 +215,11 @@ ActionManager.prototype = {
 	},
 
 	startNextLevel : function(){
+		if(this.testMode){
+			this.setActive(GUI.CRAFTBOX, 4);
+			return;
+		}
+
 		var node = document.getElementById('levelList').childNodes[this.currentLevel];
 		node.className +=' finished';
 		node.title = snake.moveCount;
@@ -233,16 +274,23 @@ ActionManager.prototype = {
 			case 80: case 27:
 					switch(this.active){
 						case GUI.GUIPLAYER:
-								this.setActive(GUI.INGAME);
+								if(this.testMode)
+									this.setActive(GUI.TESTER);
+								else
+									this.setActive(GUI.INGAME);
+
 							break;
 						case GUI.CRAFTBOX:
 								this.setActive(GUI.CRAFTMENU);
+
 							break;
 						case GUI.INGAME:
 								this.setActive(GUI.GUIPLAYER);
+
 							break;
 						case GUI.CRAFTMENU:
-								this.setActive(GUI.CRAFTBOX,4);
+								this.setActive(GUI.CRAFTBOX, 3);
+
 							break;
 					}
 				break;

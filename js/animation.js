@@ -14,6 +14,11 @@ AnimationManager.prototype = {
 				this.list.splice(i,1);
 				i--;
 			}
+	},
+
+	clear : function(){
+		for(var i=0; i<this.list.length; i++)
+			this.list[i].clear();
 	}
 };
 
@@ -61,5 +66,9 @@ Animation.prototype = {
 		}
 
 		return false;
+	},
+
+	clear : function(){
+		renderManager.clearMesh(this.mesh);
 	}
 };
