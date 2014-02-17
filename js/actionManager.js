@@ -19,18 +19,18 @@ ActionManager.prototype = {
 			if(save[i] === undefined)
 				save.push(0);
 
-			s = save[i*2]+(save[i*2+1]<<5);
+			s = save[i*2]+(save[i*2+1]<<6);
 
 			if(s !== 0){
 				lvl = stringToArray(LEVELS[i].slice(6,12));
 
-				if(lvl[0] +(lvl[1]<<5) > s)
+				if(lvl[0] +(lvl[1]<<6) >= s)
 					achived = 'gold';
 
-				else if(lvl[2] +(lvl[3]<<5) > s)
+				else if(lvl[2] +(lvl[3]<<6) >= s)
 					achived = 'silver';
 
-				else if(lvl[4] +(lvl[5]<<5) > s)
+				else if(lvl[4] +(lvl[5]<<6) >= s)
 					achived = 'copper';
 
 				else
@@ -44,7 +44,7 @@ ActionManager.prototype = {
 			else
 				achived = '';
 
-			result+="<span title='"+s+"' class='"+achived+"'>"+i+"</span>";
+			result += "<span title='"+ (i+1) +"' class='"+ achived +"'>"+ s +"</span>";
 		}
 
 		levelList.innerHTML = result;
@@ -57,7 +57,8 @@ ActionManager.prototype = {
 			document.getElementById('levelSelect'),
 			document.getElementById('craftBox'),
 			document.getElementById('craftMenu'),
-			document.getElementById('tester')
+			document.getElementById('tester'),
+			document.getElementById('score')
 		];
 
 		document.getElementsByClassName('quit')[0].onclick = function(){
@@ -82,7 +83,7 @@ ActionManager.prototype = {
 		};
 		document.getElementsByClassName('load')[0].onclick = function(){
 			self.setActive(GUI.CRAFTBOX, 2);
-		};		
+		};
 		document.getElementsByClassName('quit')[3].onclick = function(){
 			self.setActive(GUI.CRAFTBOX, 4);
 		};
@@ -95,7 +96,9 @@ ActionManager.prototype = {
 			self.setActive(GUI.GUIPLAYER, 1);
 		};
 
-
+		document.getElementsByClassName('quit')[4].onclick = function(){
+			self.startNextLevel();
+		};
 
 		window.addEventListener('keydown', function(e){self.keyDown(e);}, false);
 
@@ -121,6 +124,12 @@ ActionManager.prototype = {
 
 		snake.paused = true;
 		this.activeNode = document.getElementById('mainMenu');
+
+		if(window.location.search !== undefined){
+			document.getElementById('levelData').value = window.location.search.slice(1);
+			builder.load(document.getElementById('levelData').value);
+			self.setActive(GUI.GUIPLAYER, 1);
+		}
 	},
 
 	setActive : function(guiId, id){
@@ -131,7 +140,7 @@ ActionManager.prototype = {
 
 			break;
 			case GUI.CRAFTBOX:
-				if(id === 1 && id ===2)
+				if(id === 1 || id === 2)
 					builder.load( (id === 2 ? document.getElementById('levelData').value : "") );
 
 				else if(id === 4){
@@ -207,7 +216,7 @@ ActionManager.prototype = {
 		if(e.target.localName !== 'span' || e.target.className.indexOf('active') === -1)
 			return;
 
-		var index = e.target.firstChild.data;
+		var index = parseInt(e.target.title) -1;
 		this.currentLevel = index;
 		map.updateData(LEVELS[index]);
 
@@ -222,13 +231,13 @@ ActionManager.prototype = {
 
 		var node = document.getElementById('levelList').childNodes[this.currentLevel];
 		node.className +=' finished';
-		node.title = snake.moveCount;
+		node.firstChild.data = snake.moveCount;
 
-		var score = save[this.currentLevel*2] + (save[this.currentLevel*2+1]>>5);
+		var score = save[this.currentLevel*2] + (save[this.currentLevel*2+1]>>6);
 
 		if(snake.moveCount < score || score === 0){
-			save[this.currentLevel*2] = snake.moveCount &31;
-			save[this.currentLevel*2+1] = snake.moveCount >>5;
+			save[this.currentLevel*2] = snake.moveCount &63;
+			save[this.currentLevel*2+1] = snake.moveCount >>6;
 
 			localStorage.setItem('save', arrayToString(save));
 		}
@@ -237,16 +246,17 @@ ActionManager.prototype = {
 
 		if(LEVELS.length > this.currentLevel){
 			map.updateData(LEVELS[this.currentLevel]);
-			document.getElementById('levelList').childNodes[this.currentLevel].className='active';
+			var next = document.getElementById('levelList').childNodes[this.currentLevel];
+			if(next.className.length === 0)
+				next.className = 'active';
 
 		}else{
 			console.log('end');
 			this.currentLevel = 0;
 			map.updateData(LEVELS[this.currentLevel]);
 		}
-	},
 
-	quit : function(){
+		this.setActive(GUI.GUIPLAYER);
 	},
 
 	keyDown : function(e){

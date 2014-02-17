@@ -1,7 +1,7 @@
 function Map(){
 	this.currentData = null;
 	this.grid = [];
-	this.ld = {};
+	this.ld = [];
 
 	this.height = 0;
 	this.width = 0;
@@ -15,7 +15,7 @@ function Map(){
 }
 
 Map.prototype = {
-	updateData : function(ld){
+	updateData : function(ld){console.log('load');
 		var result = stringToArray(ld);
 		this.ld = result;
 
@@ -80,11 +80,27 @@ Map.prototype = {
 		this.dotCount += offset;
 
 		if(this.dotCount <= 0){
-			actionManager.startNextLevel();
-			return false;
+			var node = document.getElementById('score').firstChild;
+
+			node.firstChild.data = snake.moveCount;
+			if(this.ld[6] +(this.ld[7]<<6) >= snake.moveCount)
+					node.className = 'gold';
+
+				else if(this.ld[8] +(this.ld[9]<<6) >= snake.moveCount)
+					node.className = 'silver';
+
+				else if(this.ld[10] +(this.ld[11]<<6) >= snake.moveCount)
+					node.className = 'copper';
+
+				else
+					node.className = 'finished';
+
+			node.firstChild.data = snake.moveCount;
+			actionManager.setActive(GUI.SCORE, 0);
+			return 2;
 		}
 
-		return true;
+		return 1;
 	},
 
 	reset : function(){

@@ -148,15 +148,15 @@
 		}
 
 		div#levelList span.active{
-			cursor:pointer;
-			background-color:rgba(255,255,255,.5);
+			cursor: pointer;
+			background-color: rgb(150,150,150);
 		}
 
 		div#levelList span.active:hover{
 			box-shadow: inset 0px 0px 15px white;
 		}
 
-		div#levelList span{
+		div#levelList span, div#score span{
 			display: inline-block;
 			text-align: center;
 			padding-top: 5px;
@@ -167,17 +167,17 @@
 			border-bottom: solid 5px black;
 		}
 
-		div#levelList span.finished{
-			border-bottom: solid 5px rgb(125, 125, 125);
+		span.finished{
+			border-bottom: solid 5px rgb(125, 125, 125) !important; 
 		}
-		div#levelList span.copper{
-			border-bottom: solid 5px rgb(185, 89, 0);
+		span.copper{
+			border-bottom: solid 5px rgb(185, 89, 0) !important;
 		}
-		div#levelList span.silver{
-			border-bottom: solid 5px rgb(230, 230, 230);
+		span.silver{
+			border-bottom: solid 5px rgb(230, 230, 230) !important;
 		}		
-		div#levelList span.gold{
-			border-bottom: solid 5px rgb(255, 240, 63);
+		span.gold{
+			border-bottom: solid 5px rgb(255, 240, 63) !important;
 		}
 
 	 /*craft menu*/
@@ -207,11 +207,26 @@
 			width: 172px;
 		}
 
+		div#craftMenu button.tester{
+			width: 294px;
+		}
+
  	 /*gui player*/
 		div#guiPlayer{
 			position: relative;
 			font-size: 3.5em;
 		}
+
+	 /*score*/
+	 	div#score span{
+	 		height:30px;
+	 		background-color: rgb(150,150,150);
+	 	}
+	 	div#score button, div#score span{
+			width: 150px;
+			margin: 3px 75px;
+	 	}
+
 	</style>
 
 	<script type="text/javascript" charset="UTF-8" src="js/three.min.js"></script>
@@ -227,7 +242,13 @@
 
 	<script>
 		var save = (function(){
-			var result = stringToArray(localStorage.getItem('save')) || [];
+			var version = localStorage.getItem('version');
+			var result = [];
+
+			if(VERSION !== version)
+				localStorage.setItem('version', VERSION);
+			else
+				result = stringToArray(localStorage.getItem('save')) || [];
 
 			for(var i=result.length; i<LEVELS.length*2; i++)
 				result.push(0);
@@ -368,7 +389,11 @@
 		<button class='tester'>tester</button>
 	</div>
 	<div id='tester' class='menu' style='display:none'>
-		<button class='quit'>quitter</button>
+		<button class='quit'>éditeur</button>
+	</div>
+	<div id='score' class='menu' style='display:none'><span>?</span>
+		<br/>
+		<button class ='quit'>⇨</button>
 	</div>
 </body>
 </html>

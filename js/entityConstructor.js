@@ -6,7 +6,7 @@ function SnakePart(id){
 
 SnakePart.prototype = {
 	moveIn : function(){
-		return false;
+		return 0;
 	},
 
 	craftMesh : function(){
@@ -34,7 +34,7 @@ ColorSwaper.prototype =	{
 				renderManager.clearMesh(mesh);
 			});
 
-		return true;
+		return 1;
 	},
 
 	craftMesh : function(){
@@ -122,7 +122,7 @@ Dot.prototype = {
 			return map.updateDotCount(-1);
 
 		}else
-			return false;
+			return 0;
 	},
 
 	craftMesh : function(){
@@ -144,7 +144,7 @@ function CamRotator(id, dir){
 CamRotator.prototype = {
 	moveIn : function(snake, color){
 		snake.setCamRotation(this.dir);
-		return true;
+		return 1;
 	},
 
 	craftMesh : function(){
@@ -171,10 +171,10 @@ Arrow.prototype = {
 			snake.dir = this.dir;
 			snake.lockedDir = true;
 
-			return true;
+			return 1;
 		}
 		
-		return false;
+		return 0;
 	},
 
 	craftMesh : function(){

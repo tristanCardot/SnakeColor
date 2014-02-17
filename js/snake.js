@@ -101,30 +101,39 @@ Snake.prototype = {
 		var vx = (this.dir === 1 ? 1 : this.dir === 3 ? -1 : 0);
 		var vz = (this.dir === 0 ? 1 : this.dir === 2 ? -1 : 0);
 
-		if(map.moveIn(this)){
-			var lastPart = this.parts[this.parts.length-1];
+		switch(map.moveIn(this)){
+			case 0: case false:
+					map.reset();
+				break;
 
-			var mesh = TYPE.LIST[TYPE.SNAKE].mesh.clone();
-			mesh.position.x = this.pos.x;
-			mesh.position.z = this.pos.y;
-			renderManager.addMesh(mesh);
-			
-			animationManager.pushAnimation(mesh, [
-				['position', {from: new V3(this.pos.x +vx *.6, 0, this.pos.y +vz *.6), to: mesh.position.clone()}],
-				['scale', {from: new V3(.1,.1,.1), to: new V3(1,1,1)}]
-			], this.speed*.75, 0);
+			case 2:
+					snake.paused = true;
+					snake.dir = -1;
+
+			case 1: case true:
+					var lastPart = this.parts[this.parts.length-1];
+
+					var mesh = TYPE.LIST[TYPE.SNAKE].mesh.clone();
+					mesh.position.x = this.pos.x;
+					mesh.position.z = this.pos.y;
+					renderManager.addMesh(mesh);
+					
+					animationManager.pushAnimation(mesh, [
+						['position', {from: new V3(this.pos.x +vx *.6, 0, this.pos.y +vz *.6), to: mesh.position.clone()}],
+						['scale', {from: new V3(.1,.1,.1), to: new V3(1,1,1)}]
+					], this.speed*.75, 0);
 
 
-			var camP = renderManager.cam.position.clone();
+					var camP = renderManager.cam.position.clone();
 
-			animationManager.pushAnimation(renderManager.cam, [
-				['position', {from: camP, to: new V3(this.pos.x+this.off.x, camP.y, this.pos.y+this.off.y)}]
-			], this.speed, 0);
+					animationManager.pushAnimation(renderManager.cam, [
+						['position', {from: camP, to: new V3(this.pos.x+this.off.x, camP.y, this.pos.y+this.off.y)}]
+					], this.speed, 0);
 
-			this.parts.push({x: this.pos.x, y: this.pos.y, type: map.getType(this.pos), mesh:mesh});
-			map.setPos(this.pos.x, this.pos.y, TYPE.LIST[TYPE.SNAKE]);
-		}else
-			map.reset();
+					this.parts.push({x: this.pos.x, y: this.pos.y, type: map.getType(this.pos), mesh:mesh});
+					map.setPos(this.pos.x, this.pos.y, TYPE.LIST[TYPE.SNAKE]);
+				break;
+		}
 	},
 
 	setColor : function(color){
