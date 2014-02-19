@@ -480,7 +480,12 @@ var MAT = {
 	})()
 };
 
-function convertArray(list, type, length){
+/**constructeur d'Array d'Objet
+ * @param {Array.<number>} list
+ * @param {Object} type
+ * @return {Array.<type>}
+ */
+function convertArray(list, type){
 	var r = [];//result
 
 		for(var i=0; i<list.length; i+=3)
