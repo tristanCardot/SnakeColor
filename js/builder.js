@@ -1,3 +1,6 @@
+/**Permet la création de map et gére le test direct d'une map.
+ * @constructor
+ */
 function Builder(){
 	this.buildArea = [];
 	this.height = 10;
@@ -31,6 +34,7 @@ function Builder(){
 	this.load("");
 
 	var self = this;
+	// créer les évenement lié à la souris.
 	this.mouseMove = function(e){
 		if(!self.mouse.isDown)
 			return;
@@ -79,6 +83,9 @@ function Builder(){
 }
 
 Builder.prototype = {
+	/**Lie les évements lié à la créations de map au différents elements du DOM.
+	 *@param {Builder} self
+	 */
 	bindBuildBox : function(self){
 		document.getElementById('craftColor').addEventListener('click', function(e){
 			var color = e.target.className.split(' ')[0];
@@ -137,6 +144,9 @@ Builder.prototype = {
 		self.ruleGeo.background = 'url('+ self.getBGGeo() +')';
 	},
 
+	/**Crée l'image servant de font aux choix du type de géométry
+	 * @return {String}
+	 */
 	getBGGeo : function(){
 		var canvas = document.createElement('canvas');
 		canvas.height = 60;
@@ -190,6 +200,9 @@ Builder.prototype = {
 		return canvas.toDataURL(canvas.toDataURL());
 	},
 
+	/** génére les données lié au niveau crée.
+	 * @return {String}
+	 */
 	export : function(){
 		if(this.dotCount === 0)
 			return '-----';
@@ -211,6 +224,9 @@ Builder.prototype = {
 		return arrayToString(list);
 	},
 
+	/**Génére la map dans l'éditeur celon les données passés en paramétre.
+	 * @param {String} data
+	 */
 	load : function(data){
 		if(data !== "" && data.indexOf('-') === -1){
 			data = stringToArray(data);
@@ -277,6 +293,7 @@ Builder.prototype = {
 		this.buildArea[this.spawn.x][this.spawn.y].meshes.push(mesh);
 	},
 
+	/**Mais à jour l'id choisi celon l'ensemble de données (couleur direction goé).*/
 	updateSelectedId : function(){
 		if(this.selectedType<3){
 			this.selectedId = this.selectedType;
@@ -297,6 +314,11 @@ Builder.prototype = {
 		}
 	},
 
+	/**permet d'ajouter une mesh (éditeur)
+	 * @param {number} id
+	 * @param {number} x
+	 * @param {number} y
+	 */
 	addMesh : function(id, x, y){
 		var mesh = TYPE.LIST[id].mesh.clone();
 		mesh.position.x = x;
@@ -306,6 +328,11 @@ Builder.prototype = {
 		return mesh;
 	},
 
+	/** Met à jour le type présent en x,y
+	 * @param {number} typeId
+	 * @param {number} x
+	 * @param {number} y
+	 */
 	updatePos : function(typeId, x, y){
 		if(x === this.spawn.x && y === this.spawn.y)
 			return;
@@ -338,6 +365,11 @@ Builder.prototype = {
 		this.buildArea[x][y].data = typeId;
 	},
 
+	/**Met à jour le nombre de points présent sur la map
+	 * @param {number} typeId
+	 * @param {number} x
+	 * @param {number} y
+	 */
 	updateDotCount : function(typeId, x, y){
 		if(TYPE.ISDOT[this.buildArea[x][y].data])
 			this.dotCount--;
@@ -345,6 +377,10 @@ Builder.prototype = {
 			this.dotCount++;
 	},
 
+	/**changement des dimmensions de la map.
+	 * @param {number} height
+	 * @param {number} width
+	 */
 	setSize : function(height, width){
 		if(this.height < height)
 			for(var i=0, j; i<this.width; i++)
@@ -389,12 +425,16 @@ Builder.prototype = {
 		renderManager.renderFrame();
 	},
 
+	/**supprime le contenue d'un emplacement.
+	 * @param {Object} pos
+	 */
 	clearPos : function(pos){
 		for(var i=0; i<pos.meshes.length; i++)
 			renderManager.clearMesh(pos.meshes[i]);
 		pos.meshes.splice(0);
 	},
 
+	/**supprime l'ensemble des mesh lié à la création de map de la scene*/
 	clearArea : function(){
 		for(var i=0, j, k, pos; i<this.buildArea.length; i++)
 			for(j=0; j<this.buildArea[i].length; j++)
@@ -402,6 +442,7 @@ Builder.prototype = {
 					renderManager.clearMesh( this.buildArea[i][j].meshes[k] );
 	},
 
+	/**ajoute l'ensemble des mesh lié à la création de map à la scene*/
 	renderArea : function(){
 		for(var i=0, j, k, meshes; i<this.buildArea.length; i++)
 			for( j=0; j<this.buildArea[i].length; j++){
@@ -412,12 +453,14 @@ Builder.prototype = {
 			}
 	},
 
+	/** ajout les évenements liés à la souris*/
 	bindEvent : function(){
 		window.addEventListener('mousedown', this.mouseDown, false);
 		window.addEventListener('mouseup', this.mouseUp, false);
 		window.addEventListener('mousemove', this.mouseMove, false);
 	},
 
+	/** supprime les évenements liés à la souris*/
 	clearEvent : function(){
 		window.removeEventListener('mousedown', this.mouseDown, false);
 		window.removeEventListener('mouseup', this.mouseUp, false);
@@ -425,6 +468,11 @@ Builder.prototype = {
 	}
 };
 
+/**récupére le x,y de la map celon la position de la souris et de la camera.
+ * @param {number} x
+ * @param {number} y 
+ * @return {Object}
+ */
 function getGridPos(x, y){
 	var offY = renderManager.cam.position.y *Math.tan(  Math.atan( (y - window.innerHeight/2) /SCREENY)  );
 	var offX = renderManager.cam.position.y *Math.tan(  Math.atan( (x - window.innerWidth/2) /SCREENY)  );

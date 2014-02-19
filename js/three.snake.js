@@ -5437,4 +5437,3 @@ THREE.RGB_S3TC_DXT1_Format = 2001;
 THREE.RGBA_S3TC_DXT1_Format = 2002;
 THREE.RGBA_S3TC_DXT3_Format = 2003;
 THREE.RGBA_S3TC_DXT5_Format = 2004;
-get x(){return this._x;},set x(v){this._x=v;this._updateEuler();},get y(){return this._y;},set y(v){this._y=v;this._updateEuler();},get z(){return this._z;},set z(v){this._z=v;this._updateEuler();},get w(){return this._w;},set w(v){this._w = value;this._updateEuler();},

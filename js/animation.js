@@ -1,13 +1,26 @@
+/**s'occupe de la gestion des animations.
+ * @constructor
+ */
 function AnimationManager(){
 	this.list = [];
 }
 
 AnimationManager.prototype = {
+	/**Permet d'ajouter une animation à la liste.
+	 * @param {THREE.Mesh} mesh
+	 * @param {Array.<Array>} param
+	 * @param {number} duration
+	 * @param {number} delay
+	 * @param {Function|undefined} callback
+	 */
 	pushAnimation : function(mesh, param, duration, delay, callback){
 		if(mesh != null)
 			this.list.push(new Animation(mesh, param, duration, delay, callback));
 	},
 
+	/**Met a jour l'ensemble des animations
+	 * @param {number} delta
+	 */
 	update : function(delta){
 		for(var i=0; i<this.list.length; i++)
 			if(this.list[i].update(delta)){
@@ -16,12 +29,16 @@ AnimationManager.prototype = {
 			}
 	},
 
+	/**Supprime l'ensemble des animations*/
 	clear : function(){
 		for(var i=0; i<this.list.length; i++)
 			this.list[i].clear();
 	}
 };
 
+/**représente les paramétres d'une animation.
+ *	@constructor
+ */
 function Animation(mesh, param, duration, delay, callback){
 	this.mesh = mesh;
 	this.param = param;
@@ -39,6 +56,10 @@ function Animation(mesh, param, duration, delay, callback){
 }
 
 Animation.prototype = {
+	/**met a jour l'animation
+	 * @param{number}delta
+	 * @return{boolean}
+	 */
 	update : function(delta){
 		this.delay -= delta;
 
@@ -68,6 +89,7 @@ Animation.prototype = {
 		return false;
 	},
 
+	/**Retire la mesh lié à l'animation.*/
 	clear : function(){
 		renderManager.clearMesh(this.mesh);
 	}

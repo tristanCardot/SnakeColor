@@ -1,4 +1,6 @@
-
+/**S'occupe de la gestion des gui et interaction (fin de partie, lancement d'un chargement)).
+ * @constructor
+ */
 function ActionManager(){
 	this.active = GUI.MAIN;
 	this.activeNode = null;
@@ -11,6 +13,9 @@ function ActionManager(){
 }
 
 ActionManager.prototype = {
+	/**Permett de lier l'ensemble des évenements et d'initialiser le liste des niveaux.
+	 * @param {ActionManager} self
+	 */
 	init : function(self){
 		var levelList = document.getElementById('levelList');
 		var result = "";
@@ -132,6 +137,10 @@ ActionManager.prototype = {
 		}
 	},
 
+	/**Permet d'activer une gui, l'id permet de spécifier le traitement pour l'ouverture de celle-ci.
+	 * @param{GUI} guiId
+	 * @param{Number} id
+	 */
 	setActive : function(guiId, id){
 		switch(guiId){
 			case GUI.LEVELSELECT:
@@ -212,6 +221,9 @@ ActionManager.prototype = {
 		this.activeNode = this.list[guiId];
 	},
 
+	/**Appelé quand le joueur clic sur l'un des boutons de la list des niveaux.
+	 * @param{MouseEvent} e
+	 */
 	selectLevel : function(e){
 		if(e.target.localName !== 'span' || e.target.className.indexOf('active') === -1)
 			return;
@@ -223,6 +235,7 @@ ActionManager.prototype = {
 		this.setActive(GUI.GUIPLAYER);
 	},
 
+	/**Passe au niveau suivant ou retour a l'éditeur de niveau dans le cas d'un niveau test.*/
 	startNextLevel : function(){
 		if(this.testMode){
 			this.setActive(GUI.CRAFTBOX, 4);
@@ -259,6 +272,9 @@ ActionManager.prototype = {
 		this.setActive(GUI.GUIPLAYER);
 	},
 
+	/**s'occupe de la gestion des inputs claviers.
+	 * @param{KeyboardEvent}
+	 */
 	keyDown : function(e){
 		switch(e.keyCode){
 			case 90: case 87: case 38:
