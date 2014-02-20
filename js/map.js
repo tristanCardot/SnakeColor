@@ -132,6 +132,7 @@ Map.prototype = {
 
 		if(actionManager.testMode){
 			actionManager.testMode = false;
+			actionManager.setActive(GUI.CRAFTBOX, 4);
 			return;
 		}
 

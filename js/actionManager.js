@@ -316,8 +316,9 @@ ActionManager.prototype = {
 							break;
 						case GUI.CRAFTMENU:
 								this.setActive(GUI.CRAFTBOX, 3);
-
 							break;
+						case GUI.TESTER:
+								this.setActive(GUI.GUIPLAYER);
 					}
 				break;
 		}
