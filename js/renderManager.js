@@ -42,13 +42,14 @@ RenderManager.prototype = {
 		}
 
 		rm.lastTick += delta;
+		
+		snake.update(delta);
+		animationManager.update(delta);
+
+		rm.renderer.render(rm.scene, rm.cam);
 
 		if(rm.onRun)
 			requestAnimationFrame(function(){rm.update(rm);});
-
-		rm.renderer.render(rm.scene, rm.cam);
-		snake.update(delta);
-		animationManager.update(delta);
 	},
 
 	/**Mise à jour de la taile de la fenêtre.*/
@@ -165,10 +166,10 @@ RenderManager.prototype = {
 	setCamMode : function(id){
 		switch(id){
 			case 0:
-					snake.setCamRotation(0);
+					snake.setCamRotation(2);
 				break;
 			case 1:
-					renderManager.cam.position.set(1, 8, 1);
+					renderManager.cam.position.set(1, 12, 1);
 					renderManager.cam.rotation.set(-Math.PI/2, 0, 0);
 				break;
 		}

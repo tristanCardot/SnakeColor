@@ -21,7 +21,7 @@ Map.prototype = {
 	/**Charge une map celon les données.
 	 * @param {String} lb
 	 */
-	updateData : function(ld){console.log('load');
+	updateData : function(ld){
 		var result = stringToArray(ld);
 		this.ld = result;
 
@@ -47,7 +47,6 @@ Map.prototype = {
 					select = TYPE.LIST[ TYPE.WALL ];
 				else
 					select = TYPE.LIST[ result[i *map.height +j +12] ];
-
 
 				if(select !== undefined){
 					if(select.ground === true)

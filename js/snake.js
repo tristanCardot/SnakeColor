@@ -34,6 +34,9 @@ Snake.prototype = {
 		if(this.lockedDir)
 			return;
 
+		if(this.dir === -1)
+			this.setCamRotation(0);
+
 		newDir = (newDir + this.camRotation) %4;
 
 		var lastPart = this.parts[this.parts.length-2];
@@ -131,13 +134,12 @@ Snake.prototype = {
 					animationManager.pushAnimation(mesh, [
 						['position', {from: new V3(this.pos.x +vx *.6, 0, this.pos.y +vz *.6), to: mesh.position.clone()}],
 						['scale', {from: new V3(.1,.1,.1), to: new V3(1,1,1)}]
-					], this.speed*.75, 0);
-
+					], this.speed*.5, 0);
 
 					var camP = renderManager.cam.position.clone();
 
 					animationManager.pushAnimation(renderManager.cam, [
-						['position', {from: camP, to: new V3(this.pos.x+this.off.x, camP.y, this.pos.y+this.off.y)}]
+						['position', {from: camP, to: new V3(this.pos.x+this.off.x, 5, this.pos.y+this.off.y)}]
 					], this.speed, 0);
 
 					this.parts.push({x: this.pos.x, y: this.pos.y, type: map.getType(this.pos), mesh:mesh});
@@ -161,33 +163,53 @@ Snake.prototype = {
 		var newR, newP;
 
 		switch(id){
-			case 0:
+			case 0: case 2:
 					this.camRotation = 0;
 					renderManager.cam.rotation.y %= Math.PI*2;
-					newR = new V3(-Math.PI/32*12, -Math.PI/16, 0);
+
+					if(renderManager.cam.rotation.y > Math.PI)
+						renderManager.cam.rotation.y -= Math.PI*2;
+					else if(renderManager.cam.rotation.y < -Math.PI)
+						renderManager.cam.rotation.y += Math.PI*2;
+
+					if(id === 0)
+						newR = new V3(-Math.PI/32*12, -Math.PI/16, 0);
+					else
+						newR = new V3(-Math.PI/2, 0, 0);
+
 				break;
 			case 1:
 					newR = new V3(-Math.PI/32*12, renderManager.cam.rotation.y +Math.PI/2, 0);
+
 				break;
 			case -1:
 					newR = new V3(-Math.PI/32*12, renderManager.cam.rotation.y -Math.PI/2, 0);
+
 				break;
 			default: return;
 		}
 
-		this.camRotation += id;
-		if(this.camRotation < 0)
-			this.camRotation += 4;
-		this.camRotation %= 4;
+		if( id !== 2) {
+			this.camRotation += id;
 
-		switch(this.camRotation){
-			case 0: newP = new V3(this.pos.x-.5, 4, this.pos.y+2);
+			if(this.camRotation < 0)
+				this.camRotation += 4;
+
+			this.camRotation %= 4;
+
+		} else
+			this.camRotation = -1;
+
+		switch( this.camRotation ){
+			case -1: newP = new V3( map.width/2, 15, map.height/2 );
 				break;
-			case 1: newP = new V3(this.pos.x+2, 4,  this.pos.y+.5);
+			case 0: newP = new V3( this.pos.x-.5, 5, this.pos.y+2 );
 				break;
-			case 2: newP = new V3(this.pos.x+.5, 4, this.pos.y-2);
+			case 1: newP = new V3( this.pos.x+2, 5,  this.pos.y+.5 );
 				break;
-			case 3: newP = new V3(this.pos.x-2, 4,  this.pos.y-.5);
+			case 2: newP = new V3( this.pos.x+.5, 5, this.pos.y-2 );
+				break;
+			case 3: newP = new V3( this.pos.x-2, 5,  this.pos.y-.5 );
 				break;
 		}
 
@@ -197,7 +219,7 @@ Snake.prototype = {
 		animationManager.pushAnimation(renderManager.cam, [
 				['position', {from: renderManager.cam.position.clone(), to: newP}],
 				['rotation', {from: renderManager.cam.rotation.clone(), to: newR}]
-			], 500, 0);
+			], this.speed*.8, 0);
 	},
 
 	/**Rénisialise le serpent*/
@@ -212,7 +234,7 @@ Snake.prototype = {
 		this.pos.y = map.spawn.y;
 
 		this.setColor(COLOR.GREEN);
-		this.setCamRotation(0);
+		this.setCamRotation(2);
 
 		var mesh = TYPE.LIST[TYPE.SNAKE].mesh.clone();
 		mesh.position.x = map.spawn.x;
@@ -221,7 +243,7 @@ Snake.prototype = {
 
 		animationManager.pushAnimation(mesh, [
 			['scale', {from: new V3(.05,.05,.05), to: new V3(1,1,1)}]
-		],400, 0);
+		],this.speed, 0);
 
 		map.setPos(this.pos.x, this.pos.y, TYPE.LIST[TYPE.SNAKE]);
 		this.parts =[{x: this.pos.x, y: this.pos.y, type: TYPE.GROUND, mesh: mesh}];
