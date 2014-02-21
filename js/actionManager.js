@@ -133,9 +133,9 @@ ActionManager.prototype = {
 		this.activeNode = document.getElementById('mainMenu');
 
 		if(window.location.search !== undefined){
-			builder.load( window.location.search.slice(1) );
+			builder.load( location.search.slice(1) );
 			self.setActive(GUI.GUIPLAYER, 1);
-			
+
 		}else
 			builder.load("");
 	},
@@ -192,7 +192,7 @@ ActionManager.prototype = {
 			case GUI.GUIPLAYER:
 				if(id === 1){
 					var level = location.search.slice(1);
-					if(level.length<12)
+					if(level.length === 0)
 						return;
 
 					this.testMode = true;

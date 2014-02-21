@@ -232,7 +232,7 @@ Builder.prototype = {
 	 * @param {String} data
 	 */
 	load : function(data){
-		if(data !== "" && data.indexOf('-') === -1){
+		if(data.length !== 0){
 			data = stringToArray(data);
 
 			this.height = data[0];
