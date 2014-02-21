@@ -86,9 +86,6 @@ ActionManager.prototype = {
 		document.getElementsByClassName('clear')[0].onclick = function(){
 			self.setActive(GUI.CRAFTBOX, 1);
 		};
-		document.getElementsByClassName('load')[0].onclick = function(){
-			self.setActive(GUI.CRAFTBOX, 2);
-		};
 		document.getElementsByClassName('quit')[3].onclick = function(){
 			self.setActive(GUI.CRAFTBOX, 4);
 		};
@@ -96,7 +93,6 @@ ActionManager.prototype = {
 		document.getElementsByClassName('resume')[0].onclick = function(){
 			self.setActive(GUI.GUIPLAYER, 0);
 		};
-
 		document.getElementsByClassName('tester')[0].onclick = function(){
 			self.setActive(GUI.GUIPLAYER, 1);
 		};
@@ -110,31 +106,38 @@ ActionManager.prototype = {
 		document.getElementById('levelHeight').addEventListener('change', function(){
 			var value = checkInput(this, parseInt(this.value));
 			builder.setSize(value, builder.width);
+			builder.export();
 		});
 
 		document.getElementById('levelWidth').addEventListener('change', function(){
 			var value = checkInput(this, parseInt(this.value));
 			builder.setSize(builder.height, value);
+			builder.export();
 		});
 
 		document.getElementById('gold').addEventListener('change', function(){
 			builder.gold = checkInput(this, parseInt(this.value));
+			builder.export();
 		});
 		document.getElementById('silver').addEventListener('change', function(){
 			builder.silver = checkInput(this, parseInt(this.value));
+			builder.export();
 		});
 		document.getElementById('copper').addEventListener('change', function(){
 			builder.copper = checkInput(this, parseInt(this.value));
+			builder.export();
 		});
+
 
 		snake.paused = true;
 		this.activeNode = document.getElementById('mainMenu');
 
 		if(window.location.search !== undefined){
-			document.getElementById('levelData').value = window.location.search.slice(1);
-			builder.load(document.getElementById('levelData').value);
+			builder.load( window.location.search.slice(1) );
 			self.setActive(GUI.GUIPLAYER, 1);
-		}
+			
+		}else
+			builder.load("");
 	},
 
 	/**Permet d'activer une gui, l'id permet de spécifier le traitement pour l'ouverture de celle-ci.
@@ -150,7 +153,7 @@ ActionManager.prototype = {
 			break;
 			case GUI.CRAFTBOX:
 				if(id === 1 || id === 2)
-					builder.load( (id === 2 ? document.getElementById('levelData').value : "") );
+					builder.load( (id === 2 ? location.search.slice(1) : "") );
 
 				else if(id === 4){
 					renderManager.stopUpdate();
@@ -188,8 +191,8 @@ ActionManager.prototype = {
 			break;
 			case GUI.GUIPLAYER:
 				if(id === 1){
-					var level = document.getElementById('levelData').value;
-					if(level.indexOf('-----') !== -1 || level.length<6)
+					var level = location.search.slice(1);
+					if(level.length<12)
 						return;
 
 					this.testMode = true;
@@ -210,8 +213,7 @@ ActionManager.prototype = {
 
 			break;
 			case GUI.CRAFTMENU:
-				document.getElementById('levelData').value = builder.export();
-
+				builder.export();
 			break;
 		}
 
