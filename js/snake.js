@@ -5,7 +5,7 @@ function Snake(){
 	this.pos = {x: 0, y: 0};
 	this.off = {x: 0, y: 0};
 	this.maxLength = 5;
-	this.speed = 400;
+	this.speed = 450;
 
 	this.nextMove = 0;
 	this.moveCount = 0;
@@ -16,6 +16,8 @@ function Snake(){
 
 	this.dir = -1;
 	this.parts = [];
+	this.bufferMesh = null;
+
 	this.color = COLOR.GREEN;
 	this.mat = TYPE.LIST[ TYPE.SNAKE].mesh.material;
 	this.nodeScore = null;
@@ -94,22 +96,27 @@ Snake.prototype = {
 		this.moveCount++;
 		this.nodeScore.data = this.moveCount;
 
+		var tmpMesh = this.bufferMesh;
+
 		if(this.parts.length > this.maxLength){
-			var part = this.parts[0];
+			var part = this.parts.splice(0,1)[0];
+
 
 			if(TYPE.REUSABLE[ part.type ])
 				map.setPos(part.x, part.y, TYPE.LIST[part.type]);
 			else
 				map.setPos(part.x, part.y, TYPE.LIST[TYPE.GROUND]);
 
-			this.parts = this.parts.splice(1);
-
 			animationManager.pushAnimation(part.mesh, [
 				['position', {from: new V3(part.x, 0, part.y), to: new V3(this.parts[0].x, 0, this.parts[0].y)}],
 				['scale', {from: new V3(1,1,1), to: new V3(.1,.1,.1)}]
-			], this.speed, 0,
+			], this.speed*.8, 0,
 			function(mesh){renderManager.clearMesh(mesh);});
-		}
+
+	 		this.bufferMesh = part.mesh;
+
+		}else
+			this.bufferMesh = null;
 
 		var vx = (this.dir === 1 ? 1 : this.dir === 3 ? -1 : 0);
 		var vz = (this.dir === 0 ? 1 : this.dir === 2 ? -1 : 0);
@@ -126,7 +133,7 @@ Snake.prototype = {
 			case 1: case true:
 					var lastPart = this.parts[this.parts.length-1];
 
-					var mesh = TYPE.LIST[TYPE.SNAKE].mesh.clone();
+					var mesh = tmpMesh || TYPE.LIST[TYPE.SNAKE].mesh.clone();
 					mesh.position.x = this.pos.x;
 					mesh.position.z = this.pos.y;
 					renderManager.addMesh(mesh);
@@ -134,7 +141,7 @@ Snake.prototype = {
 					animationManager.pushAnimation(mesh, [
 						['position', {from: new V3(this.pos.x +vx *.6, 0, this.pos.y +vz *.6), to: mesh.position.clone()}],
 						['scale', {from: new V3(.1,.1,.1), to: new V3(1,1,1)}]
-					], this.speed*.5, 0);
+					], this.speed*.6, 0);
 
 					var camP = renderManager.cam.position.clone();
 
@@ -229,6 +236,7 @@ Snake.prototype = {
 		this.moveCount = 0;
 		this.maxLength = 5;
 		this.dir = -1;
+		this.bufferMesh = null;
 
 		this.pos.x = map.spawn.x;
 		this.pos.y = map.spawn.y;
