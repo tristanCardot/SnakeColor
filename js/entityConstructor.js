@@ -1,3 +1,11 @@
+/** @moveIn : appelé quand le sepent change de position.
+  * @craftMesh : retourne un copie de la mesh du model
+  */
+
+
+/**représente une partie du serpent.
+ * @constructor
+ */
 function SnakePart(id){
 	this.id = id;
 	this.color;
@@ -17,8 +25,12 @@ SnakePart.prototype = {
 	}
 };
 
-
-function ColorSwaper(id, color, pos){
+/**Model d'un changeur de couleur.
+ * @constructor
+ * @param {number} id
+ * @param {COLOR} color
+ */
+function ColorSwaper(id, color){
 	this.id = id;
 	this.color = color;
 	this.mesh = this.craftMesh();
@@ -45,6 +57,11 @@ ColorSwaper.prototype =	{
 	}
 };
 
+/**Utilisé pour créer le mur et le sol.
+ * @constructor
+ * @param {number} id
+ * @param {number} type
+ */
 function Block(id, type){
 	this.id = id;
 	this.type = type;
@@ -101,7 +118,11 @@ Block.prototype = {
 	}
 };
 
-
+/**les points
+ * @constructor
+ * @param {number} id
+ * @param {COLOR} color
+ */
 function Dot(id, color){
 	this.id = id;
 	this.color = color;
@@ -133,7 +154,11 @@ Dot.prototype = {
 	}
 };
 
-
+/**Blocs vesant pivoter la camera.
+ * @constructor
+ * @param {number} id
+ * @param {number} dir
+ */
 function CamRotator(id, dir){
 	this.id = id;
 	this.dir = dir;
@@ -157,7 +182,11 @@ CamRotator.prototype = {
 	}
 };
 
-
+/**Blocs forcant la direction du serpent.
+ * @constructor
+ * @param {number} id
+ * @param {number} dir
+ */
 function Arrow(id, dir){
 	this.id = id;
 	this.dir = dir;
@@ -190,6 +219,11 @@ Arrow.prototype = {
 };
 
 
+/**Blocs empéchant le serpent de passer celon sa couleur.
+ * @constructor
+ * @param {number} id
+ * @param {COLOR} color
+ */
 function BannedColor(id, color){
 	this.id = id;
 	this.color = color;
@@ -209,7 +243,7 @@ BannedColor.prototype = {
 	}
 };
 
-
+/**@enum {number|Array}*/
 var TYPE = {
 	GROUND: 0,
 	WALL: 1,

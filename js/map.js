@@ -1,3 +1,6 @@
+/** gestion de la carte de jeu*
+ * @constructor
+ */
 function Map(){
 	this.currentData = null;
 	this.grid = [];
@@ -15,6 +18,9 @@ function Map(){
 }
 
 Map.prototype = {
+	/**Charge une map celon les données.
+	 * @param {String} lb
+	 */
 	updateData : function(ld){console.log('load');
 		var result = stringToArray(ld);
 		this.ld = result;
@@ -64,18 +70,32 @@ Map.prototype = {
 		snake.reset();
 	},
 
+	/**mouvement du serpent.
+	 * @param {Snake} snake
+	 */
 	moveIn : function(snake){
 		return this.grid[snake.pos.x][snake.pos.y].moveIn(snake, renderManager.grid[snake.pos.x][snake.pos.y]);
 	},
 
+	/**récupére le TYPEid d'une position.
+	 * @param {Object} pos (x,y)
+	 */
 	getType : function(pos){
 		return this.grid[pos.x][pos.y].id;
 	},
 
+	/**Modifie le type présent en x,y.
+	 * @param {number} x
+	 * @param {number} y
+	 * @param {TYPE} type
+	 */
 	setPos : function(x, y, type){
 		this.grid[x][y] = type;
 	},
 
+	/**Mais à jour le nombre de points restant pour finir le niveau.
+	 * @param {number} offset
+	 */
 	updateDotCount : function(offset){
 		this.dotCount += offset;
 
@@ -103,6 +123,7 @@ Map.prototype = {
 		return 1;
 	},
 
+	/**Rénisialise la map*/
 	reset : function(){
 		snake.paused = true;
 		snake.dir = -1;
@@ -111,6 +132,7 @@ Map.prototype = {
 
 		if(actionManager.testMode){
 			actionManager.testMode = false;
+			actionManager.setActive(GUI.CRAFTBOX, 4);
 			return;
 		}
 

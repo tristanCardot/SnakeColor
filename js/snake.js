@@ -1,3 +1,6 @@
+/**Représente le serpent du joueur.
+ * @constructor
+ */
 function Snake(){
 	this.pos = {x: 0, y: 0};
 	this.off = {x: 0, y: 0};
@@ -19,10 +22,14 @@ function Snake(){
 }
 
 Snake.prototype = {
+	/**Permet d'ajouter 1 à la taille max du serpent.*/
 	growUp : function(){
 		this.maxLength++;
 	},
 
+	/**Permet de mettre à jourla direction du serpent.
+	 * @param {number} newDir
+	 */
 	setDir : function(newDir){
 		if(this.lockedDir)
 			return;
@@ -55,6 +62,9 @@ Snake.prototype = {
 		}
 	},
 
+	/**Mais à jour le serpent.
+	 * @param {number} delta
+	 */
 	update : function(delta){
 		if(this.paused)
 			return;
@@ -136,11 +146,17 @@ Snake.prototype = {
 		}
 	},
 
+	/**Modifie la couleur du serpent
+	 * @param {COLOR} color
+	 */
 	setColor : function(color){
 			snake.color = color;
 			snake.mat.uniforms.color.value = COLOR.RGB[ color];
 	},
 
+	/**Modifie la rotation de la camera
+	 * @param {number} id (direction de rotation ou reset)
+	 */
 	setCamRotation : function(id){
 		var newR, newP;
 
@@ -184,6 +200,7 @@ Snake.prototype = {
 			], 500, 0);
 	},
 
+	/**Rénisialise le serpent*/
 	reset : function(){
 		this.clear();
 
@@ -211,6 +228,7 @@ Snake.prototype = {
 		snake.paused = false;
 	},
 
+	/**Retir les mesh du serpent de la scene*/
 	clear : function(){
 		for(var i=0; i<this.parts.length; i++)
 			renderManager.clearMesh( this.parts[i].mesh);

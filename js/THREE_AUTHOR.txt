@@ -1,0 +1,18 @@
+/**
+ * @author mrdoob / http://mrdoob.com/
+ * @author alteredq / http://alteredqualia.com/
+ * @author bhouston / http://exocortex.com
+ * @author mikael emtinger / http://gomo.se/
+ * @author WestLangley / http://github.com/WestLangley
+ * @author *kile / http://kile.stravaganza.org/
+ * @author philogb / http://blog.thejit.org/
+ * @author egraether / http://egraether.com/
+ * @author szimek / https://github.com/szimek/
+ * @author WestLangley / http://github.com/WestLangley
+ * @author supereggbert / http://www.paulbrunt.co.uk/
+ * @author kile / http://kile.stravaganza.org/
+ * @author zz85 / http://www.lab4games.net/zz85/blog
+ * @author mikael emtinger / http://gomo.se/
+ * @author Larry Battle / http://bateru.com/news
+ * @author jonobr1 / http://jonobr1.com/
+ */

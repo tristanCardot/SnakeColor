@@ -229,7 +229,7 @@
 
 	</style>
 
-	<script type="text/javascript" charset="UTF-8" src="js/three.min.js"></script>
+	<script type="text/javascript" charset="UTF-8" src="js/three.snake.min.js"></script>
 	<script type="text/javascript" charset="UTF-8" src="js/static.js"></script>
 	<script type="text/javascript" charset="UTF-8" src="js/actionManager.js"></script>
 	<script type="text/javascript" charset="UTF-8" src="js/animation.js"></script>
@@ -241,6 +241,7 @@
 
 
 	<script>
+		//Crée la sauvegarde.
 		var save = (function(){
 			var version = localStorage.getItem('version');
 			var result = [];
@@ -257,6 +258,7 @@
 			return result;
 		})();
 
+		//Création de la liste des Objet.
 		var snake = new Snake();
 		var map = new Map();
 		var renderManager = new RenderManager();
@@ -270,6 +272,9 @@
 			snake.nodeScore = document.getElementById('guiPlayer').firstChild;
 		}, false);
 
+		/**convertie un String en Array (2^6).
+		 * @param {String}
+		 */
 		function stringToArray(string){
 			if(!string)
 				return undefined;
@@ -294,6 +299,9 @@
 			return result;
 		}
 
+		/**convertie une Array en String (2^6).
+		 * @param {Array.<Number>}
+		 */
 		function arrayToString(array){
 			if(!array)
 				return undefined;
@@ -317,6 +325,10 @@
 			return result;
 		}
 
+		/**Permets de vérifier que les restrictions de l'input sont respectés
+		 * @param {HTMLInputElement} input 
+		 * @param {Number} value
+		 */
 		function checkInput(input, value){
 			Ginput = input;
 			if(value > input.max){

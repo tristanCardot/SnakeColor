@@ -1,3 +1,6 @@
+/** s'occupe du render.
+ * @constructor
+ */
 function RenderManager(){
 	this.cam = new THREE.PerspectiveCamera(FOV, window.innerWidth/window.innerHeight, 1, 100);
 	this.renderer = new THREE.WebGLRenderer({antialias: true});
@@ -18,16 +21,19 @@ function RenderManager(){
 }
 
 RenderManager.prototype = {
+	/**Met en route du rendu */
 	startUpdate : function(){
 		this.onRun = true;
 		this.lastTick = Date.now();
 		this.update(this);
 	},
 
+	/**Met en pause le rendu */
 	stopUpdate : function(){
 		this.onRun = false;
 	},
 
+	/**Met à jour le rendu */
 	update : function(rm){//rm => RenderManager
 		var delta = Date.now() -rm.lastTick;
 		if(delta > 40){
@@ -45,6 +51,7 @@ RenderManager.prototype = {
 		animationManager.update(delta);
 	},
 
+	/**Mise à jour de la taile de la fenêtre.*/
 	updateSize : function(e){
 		this.cam.aspect = window.innerWidth /window.innerHeight;
 		this.cam.updateProjectionMatrix();
@@ -55,6 +62,7 @@ RenderManager.prototype = {
 		this.renderFrame();
 	},
 
+	/**Initialise la grille servant à contenir les mesh.*/
 	initGrid : function(height, width){
 		this.clearGrid();
 		this.clearGround();
@@ -74,6 +82,7 @@ RenderManager.prototype = {
 		this.scene.add( this.ground);
 	},
 
+	/**Supprimes la grille et les mesh de la scene.*/
 	clearGrid : function(){
 		for(var i=0, j=0; i<this.grid.length; i++)
 			for(j=0; j<this.grid[0].length; j++)
@@ -83,6 +92,11 @@ RenderManager.prototype = {
 				}
 	},
 
+	/**Construit une mesh celon sont type et sa position.
+	 * @param {TYPE} type
+	 * @param {number} x
+	 * @param {number} y
+	 */
 	craftMesh : function(type, x, y){
 		if(type === undefined)
 			return;
@@ -96,19 +110,34 @@ RenderManager.prototype = {
 		return mesh;
 	},
 
+	/**Retir la mesh en x,y
+	 * @param {number} x
+	 * @param {number} y
+	 */
 	clearPos : function(x, y){
 		this.scene.remove(this.grid[x][y]);
 		this.grid[x][y] = null;
 	},
 
+	/**retirn une mesh
+	 * @param {Mesh} mesh
+	 */
 	clearMesh : function(mesh){
 		this.scene.remove(mesh);
 	},
 
+	/**ajoute une mesh
+	 * @param {Mesh} mesh
+	 */
 	addMesh : function(mesh){
 		this.scene.add(mesh);
 	},
 
+	/**ajoute une mesh au sol
+	 * @param {TYPE} type
+	 * @param {number} x
+	 * @param {number} y
+	 */
 	addGround : function(type, x, y){
 		if(type.ground !== true)
 			return;
@@ -122,14 +151,17 @@ RenderManager.prototype = {
 		grad.value = grad.value.concat(ground.material.attributes.grad.value);
 	},
 
+	/**Retir le sol de la scene*/
 	clearGround : function(){
 		this.scene.remove(this.ground);
 	},
 
+	/**Fait le rendu une fois*/
 	renderFrame : function(){
 		this.renderer.render(this.scene, this.cam);
 	},
 
+	/**Passe la de vue en jeu à la vue création*/
 	setCamMode : function(id){
 		switch(id){
 			case 0:
