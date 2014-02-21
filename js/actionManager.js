@@ -173,6 +173,8 @@ ActionManager.prototype = {
 
 				builder.renderArea();
 				renderManager.renderFrame();
+				
+				this.testMode = false;
 
 			break;
 			case GUI.MAIN :
