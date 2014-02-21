@@ -31,8 +31,6 @@ function Builder(){
 	this.ruleGeo = rules[0].style;
 	this.ruleFrame = rules[1].style;
 
-	this.load("");
-
 	var self = this;
 	// créer les évenement lié à la souris.
 	this.mouseMove = function(e){
@@ -204,8 +202,10 @@ Builder.prototype = {
 	 * @return {String}
 	 */
 	export : function(){
-		if(this.dotCount === 0)
+		if(this.dotCount === 0){
+			history.pushState({}, "SnakeCustom", location.pathname);
 			return '-----';
+		}
 
 		var list = [
 			this.height, this.width,
@@ -221,18 +221,23 @@ Builder.prototype = {
 				list.push(this.buildArea[i][j].data);
 
 		list[this.spawn.x *this.height +this.spawn.y  +12] = 0;
-		return arrayToString(list);
+
+		var result = arrayToString(list);
+
+		history.pushState({}, "SnakeCustom", location.pathname +'?'+result);
+		return result;
 	},
 
 	/**Génére la map dans l'éditeur celon les données passés en paramétre.
 	 * @param {String} data
 	 */
 	load : function(data){
-		if(data !== "" && data.indexOf('-') === -1){
+		if(data.length !== 0){
 			data = stringToArray(data);
 
 			this.height = data[0];
 			this.width = data[1];
+
 			this.spawn.x = data[2];
 			this.spawn.y = data[3];
 
@@ -255,6 +260,8 @@ Builder.prototype = {
 			this.copper = 0;
 		}
 
+		document.getElementById('levelHeight').value = this.height;
+		document.getElementById('levelWidth').value = this.width;
 		this.setSize(this.height, this.width);
 
 		for(var i=0, j; i<this.buildArea.length; i++)
